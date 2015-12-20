@@ -30,8 +30,12 @@ Partial Class Form1
         Me.ToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
         Me.GanttChart2 = New TestApplication.GanttChart()
         Me.GanttChart1 = New TestApplication.GanttChart()
+        Me.Button1 = New System.Windows.Forms.Button()
+        Me.Button2 = New System.Windows.Forms.Button()
+        Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
         Me.ContextMenuGanttChart1.SuspendLayout()
         Me.ContextMenuGanttChart2.SuspendLayout()
+        CType(Me.FileSystemWatcher1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'ContextMenuGanttChart1
@@ -67,11 +71,11 @@ Partial Class Form1
         Me.GanttChart2.ContextMenuStrip = Me.ContextMenuGanttChart2
         Me.GanttChart2.DateFont = New System.Drawing.Font("Verdana", 8.0!)
         Me.GanttChart2.FromDate = New Date(CType(0, Long))
-        Me.GanttChart2.Location = New System.Drawing.Point(14, 267)
+        Me.GanttChart2.Location = New System.Drawing.Point(14, 353)
         Me.GanttChart2.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.GanttChart2.Name = "GanttChart2"
         Me.GanttChart2.RowFont = New System.Drawing.Font("Verdana", 8.0!)
-        Me.GanttChart2.Size = New System.Drawing.Size(1088, 304)
+        Me.GanttChart2.Size = New System.Drawing.Size(747, 218)
         Me.GanttChart2.TabIndex = 1
         Me.GanttChart2.Text = "GanttChart2"
         Me.GanttChart2.TimeFont = New System.Drawing.Font("Verdana", 8.0!)
@@ -93,7 +97,7 @@ Partial Class Form1
         Me.GanttChart1.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.GanttChart1.Name = "GanttChart1"
         Me.GanttChart1.RowFont = New System.Drawing.Font("微軟正黑體", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(136, Byte))
-        Me.GanttChart1.Size = New System.Drawing.Size(1088, 244)
+        Me.GanttChart1.Size = New System.Drawing.Size(747, 244)
         Me.GanttChart1.TabIndex = 0
         Me.GanttChart1.Text = "GanttChart1"
         Me.GanttChart1.TimeFont = New System.Drawing.Font("微軟正黑體", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
@@ -101,11 +105,37 @@ Partial Class Form1
         Me.GanttChart1.ToolTipText = CType(resources.GetObject("GanttChart1.ToolTipText"), System.Collections.Generic.List(Of String))
         Me.GanttChart1.ToolTipTextTitle = ""
         '
+        'Button1
+        '
+        Me.Button1.Location = New System.Drawing.Point(26, 279)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(119, 50)
+        Me.Button1.TabIndex = 2
+        Me.Button1.Text = "Button1"
+        Me.Button1.UseVisualStyleBackColor = True
+        '
+        'Button2
+        '
+        Me.Button2.Location = New System.Drawing.Point(179, 280)
+        Me.Button2.Name = "Button2"
+        Me.Button2.Size = New System.Drawing.Size(123, 48)
+        Me.Button2.TabIndex = 3
+        Me.Button2.Text = "Button2"
+        Me.Button2.UseVisualStyleBackColor = True
+        '
+        'FileSystemWatcher1
+        '
+        Me.FileSystemWatcher1.EnableRaisingEvents = True
+        Me.FileSystemWatcher1.Path = "C:\Users\devilstan\Downloads\BT\0816ftn026"
+        Me.FileSystemWatcher1.SynchronizingObject = Me
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1116, 576)
+        Me.ClientSize = New System.Drawing.Size(775, 576)
+        Me.Controls.Add(Me.Button2)
+        Me.Controls.Add(Me.Button1)
         Me.Controls.Add(Me.GanttChart2)
         Me.Controls.Add(Me.GanttChart1)
         Me.Font = New System.Drawing.Font("微軟正黑體", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(136, Byte))
@@ -115,6 +145,7 @@ Partial Class Form1
         Me.Text = "Gantt Chart Tester"
         Me.ContextMenuGanttChart1.ResumeLayout(False)
         Me.ContextMenuGanttChart2.ResumeLayout(False)
+        CType(Me.FileSystemWatcher1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
@@ -124,5 +155,7 @@ Partial Class Form1
     Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ContextMenuGanttChart1 As System.Windows.Forms.ContextMenuStrip
     Friend WithEvents SaveImageToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-
+    Friend WithEvents Button1 As Button
+    Friend WithEvents Button2 As Button
+    Friend WithEvents FileSystemWatcher1 As IO.FileSystemWatcher
 End Class
