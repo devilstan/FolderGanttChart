@@ -18,23 +18,25 @@ Public Class Form1
             Dim xRoot As XmlNode
             Dim xNodeList As XmlNodeList
             Dim xNodeTemp As XmlNode
+            Dim lst As New List(Of BarInformation)
             Try
                 '讀取 XML
                 xdoc.Load("XML_log.xml")
                 xRoot = CType(xdoc.DocumentElement, XmlNode)
                 '選擇 section
-                xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & "test" & "']")
-                xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
+                Dim rowindex As Integer = 0
+                For Each Dir As String In Directory.GetDirectories("C:\Users\devilstan\Downloads\BT\0816ftn026")
+                    Dim dirarr As String()
+                    dirarr = Dir.Split("\")
+                    xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & dirarr(dirarr.Length - 1) & "']")
+                    xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
+                    If xNodeList.Count > 0 Then lst.Add(New BarInformation(Dir, CType(xNodeList.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList.Item(xNodeList.Count - 1), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, rowindex))
+                    rowindex = rowindex + 1
+                Next
+
             Catch ex As Exception
                 MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
             End Try
-
-            Dim lst As New List(Of BarInformation)
-            If xNodeList.Count > 0 Then lst.Add(New BarInformation("程式碼維護", CType(xNodeList.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList.Item(xNodeList.Count - 1), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, 0))
-            lst.Add(New BarInformation("制御仕樣書", New Date(2015, 12, 13), New Date(2015, 12, 20), Color.AliceBlue, Color.Khaki, 1))
-            lst.Add(New BarInformation("測試仕樣書", New Date(2015, 12, 14), New Date(2015, 12, 24), Color.Violet, Color.Khaki, 2))
-            lst.Add(New BarInformation("檢核", New Date(2015, 12, 21), New Date(2015, 12, 22, 12, 0, 0), Color.Yellow, Color.Khaki, 3))
-            lst.Add(New BarInformation("會議記錄", New Date(2015, 12, 17), New Date(2015, 12, 24), Color.LawnGreen, Color.Khaki, 4))
 
             For Each bar As BarInformation In lst
                 .AddChartBar(bar.RowText, bar, bar.FromTime, bar.ToTime, bar.Color, bar.HoverColor, bar.Index)
