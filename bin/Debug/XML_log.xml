@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root name="H123">
+  <folder name="test">
+    <log time="2015.12.12" />
+    <log time="2015.12.13" />
+    <log time="2015.12.18" />
+    <log time="2015.12.19" />
+    <log time="2015.12.20" />
+  </folder>
+  <folder name="新增資料夾 (2)">
+    <log time="2015.12.19" />
+    <log time="2015.12.20" />
+  </folder>
+</root>

@@ -34,6 +34,7 @@ Partial Class Form1
         Me.Button3 = New System.Windows.Forms.Button()
         Me.GanttChart2 = New TestApplication.GanttChart()
         Me.GanttChart1 = New TestApplication.GanttChart()
+        Me.Button4 = New System.Windows.Forms.Button()
         Me.ContextMenuGanttChart1.SuspendLayout()
         Me.ContextMenuGanttChart2.SuspendLayout()
         CType(Me.FileSystemWatcher1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -139,11 +140,21 @@ Partial Class Form1
         Me.GanttChart1.ToolTipText = CType(resources.GetObject("GanttChart1.ToolTipText"), System.Collections.Generic.List(Of String))
         Me.GanttChart1.ToolTipTextTitle = ""
         '
+        'Button4
+        '
+        Me.Button4.Location = New System.Drawing.Point(469, 280)
+        Me.Button4.Name = "Button4"
+        Me.Button4.Size = New System.Drawing.Size(75, 46)
+        Me.Button4.TabIndex = 5
+        Me.Button4.Text = "Button4"
+        Me.Button4.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(775, 576)
+        Me.Controls.Add(Me.Button4)
         Me.Controls.Add(Me.Button3)
         Me.Controls.Add(Me.Button2)
         Me.Controls.Add(Me.Button1)
@@ -170,4 +181,5 @@ Partial Class Form1
     Friend WithEvents Button2 As Button
     Friend WithEvents FileSystemWatcher1 As IO.FileSystemWatcher
     Friend WithEvents Button3 As Button
+    Friend WithEvents Button4 As Button
 End Class
