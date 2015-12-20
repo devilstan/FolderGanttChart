@@ -1,5 +1,8 @@
-﻿Imports System.IO
+﻿Imports System
+Imports System.IO
 Imports System.Diagnostics
+Imports System.Collections
+
 
 Public Class Form1
 
@@ -15,7 +18,7 @@ Public Class Form1
 
             Dim today As Date = Date.Now
 
-            lst.Add(New BarInformation("程式碼維護", New Date(2015, 12, 12), today, Color.Aqua, Color.Khaki, 0))
+            lst.Add(New BarInformation("程式碼維護", New Date(2015, 12, 12), New Date(2015, 12, 13), Color.Aqua, Color.Khaki, 0))
             lst.Add(New BarInformation("制御仕樣書", New Date(2015, 12, 13), New Date(2015, 12, 20), Color.AliceBlue, Color.Khaki, 1))
             lst.Add(New BarInformation("測試仕樣書", New Date(2015, 12, 14), New Date(2015, 12, 24), Color.Violet, Color.Khaki, 2))
             lst.Add(New BarInformation("檢核", New Date(2015, 12, 21), New Date(2015, 12, 22, 12, 0, 0), Color.Yellow, Color.Khaki, 3))
@@ -24,10 +27,7 @@ Public Class Form1
             For Each bar As BarInformation In lst
                 .AddChartBar(bar.RowText, bar, bar.FromTime, bar.ToTime, bar.Color, bar.HoverColor, bar.Index)
             Next
-            .RemoveBars()
-            For Each bar As BarInformation In lst
-                .AddChartBar(bar.RowText, bar, bar.FromTime, bar.ToTime, bar.Color, bar.HoverColor, bar.Index)
-            Next
+
         End With
 
         If True Then
@@ -163,11 +163,45 @@ Public Class Form1
             '                        " has been modified" & vbCrLf
         End If
         If e.ChangeType = IO.WatcherChangeTypes.Created Then
+            If File.Exists("test.txt") Then
+                Dim objReader As New StreamReader("test.txt")
+                Dim sLine As String = ""
+                Dim arrText As New ArrayList()
+                Do
+                    sLine = objReader.ReadLine()
+                    If Not sLine Is Nothing Then
+                        arrText.Add(sLine)
+                    End If
+                Loop Until sLine Is Nothing
+                objReader.Close()
+
+                Dim file As System.IO.StreamWriter
+                file = My.Computer.FileSystem.OpenTextFileWriter("test.txt", False)
+                arrText(0) = arrText(0) & "," & Date.Now
+
+                file.WriteLine(arrText(0))
+                file.WriteLine(Date.Now)
+                file.Close()
+
+                Dim datearray() As String
+                datearray = arrText(0).split(",")
+
+                UpdateUI(GanttChart1, datearray(0), datearray(datearray.Length - 1))
+            Else
+                Dim file As System.IO.StreamWriter
+                file = My.Computer.FileSystem.OpenTextFileWriter("test.txt", True)
+                file.WriteLine(Date.Now)
+                file.WriteLine(Date.Now)
+                file.Close()
+            End If
+
+
             MsgBox("create")
-            'txt_folderactivity.Text &= "File " & e.FullPath &
-            '                         " has been created" & vbCrLf
-        End If
-        If e.ChangeType = IO.WatcherChangeTypes.Deleted Then
+
+                'txt_folderactivity.Text &= "File " & e.FullPath &
+                '                         " has been created" & vbCrLf
+            End If
+            If e.ChangeType = IO.WatcherChangeTypes.Deleted Then
             MsgBox("delete")
             'txt_folderactivity.Text &= "File " & e.FullPath &
             '                        " has been deleted" & vbCrLf
@@ -186,4 +220,62 @@ Public Class Form1
         Button1.Enabled = True
         Button2.Enabled = False
     End Sub
+
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        Dim objReader As New StreamReader("test.txt")
+        Dim sLine As String = ""
+        Dim arrText As New ArrayList()
+        Do
+            sLine = objReader.ReadLine()
+            If Not sLine Is Nothing Then
+                arrText.Add(sLine)
+            End If
+        Loop Until sLine Is Nothing
+        objReader.Close()
+        UpdateUI(GanttChart1, arrText(0), arrText(arrText.Count - 1))
+    End Sub
+
+    Private Delegate Sub UpdateUICallBack(ByVal GanttChart1 As Control, firstdate As String, lastdate As String)
+
+    Private Sub UpdateUI(ByVal c As Control, firstdate As String, lastdate As String)
+        If Me.InvokeRequired() Then
+            Dim cb As New UpdateUICallBack(AddressOf UpdateUI)
+            Me.Invoke(cb, c, firstdate, lastdate)
+        Else
+            If File.Exists("test.txt") Then
+                Dim objReader As New StreamReader("test.txt")
+                Dim sLine As String = ""
+                Dim arrText As New ArrayList()
+                Do
+                    sLine = objReader.ReadLine()
+                    If Not sLine Is Nothing Then
+                        arrText.Add(sLine)
+                    End If
+                Loop Until sLine Is Nothing
+                objReader.Close()
+
+                Dim date_first As Date = "#" & firstdate & "#"
+                Dim date_last As Date = "#" & lastdate & "#"
+
+                With GanttChart1
+                    .RemoveBars()
+                    Dim lst As New List(Of BarInformation)
+
+                    Dim today As Date = Date.Now
+
+                    lst.Add(New BarInformation("程式碼維護", date_first, date_last, Color.Aqua, Color.Khaki, 0))
+                    lst.Add(New BarInformation("制御仕樣書", New Date(2015, 12, 13), New Date(2015, 12, 20), Color.AliceBlue, Color.Khaki, 1))
+                    lst.Add(New BarInformation("測試仕樣書", New Date(2015, 12, 14), New Date(2015, 12, 24), Color.Violet, Color.Khaki, 2))
+                    lst.Add(New BarInformation("檢核", New Date(2015, 12, 21), New Date(2015, 12, 22, 12, 0, 0), Color.Yellow, Color.Khaki, 3))
+                    lst.Add(New BarInformation("會議記錄", New Date(2015, 12, 17), New Date(2015, 12, 24), Color.LawnGreen, Color.Khaki, 4))
+                    For Each bar As BarInformation In lst
+                        .AddChartBar(bar.RowText, bar, bar.FromTime, bar.ToTime, bar.Color, bar.HoverColor, bar.Index)
+                    Next
+                    .Refresh()
+                End With
+
+            End If
+        End If
+    End Sub
+
 End Class
