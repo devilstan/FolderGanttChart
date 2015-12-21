@@ -520,16 +520,18 @@ Public Class GanttChart
 
                     ' Makes the bar gradient
 
-                    obBrush = New LinearGradientBrush(obRect, color, color.Gray, LinearGradientMode.Vertical)
+                    obBrush = New LinearGradientBrush(obRect, color, color, LinearGradientMode.Vertical)
 
                     ' Draws the bar
 
-                    grfx.DrawRectangle(Pens.Black, obRect)
+                    'grfx.DrawRectangle(Pens.Black, obRect)
+                    grfx.DrawRectangle(New Pen(color), obRect)
                     grfx.FillRectangle(obBrush, obRect)
 
                     ' Draws the rowtext
 
-                    grfx.DrawString(bar.Text, rowTextFont, Brushes.Black, 0, barStartTop + (barHeight * (index - scrollPos)) + (barSpace * (index - scrollPos)))
+                    'grfx.DrawString(bar.Text, rowTextFont, Brushes.Black, 0, barStartTop + (barHeight * (index - scrollPos)) + (barSpace * (index - scrollPos)))
+                    grfx.DrawString(bar.Text, rowTextFont, New SolidBrush(Color.FromArgb(51, 53, 51)), 0, barStartTop + (barHeight * (index - scrollPos)) + (barSpace * (index - scrollPos)))
 
                     obBrush = Nothing
                     obRect = Nothing
@@ -588,7 +590,7 @@ Public Class GanttChart
 
         For index = 0 To GetIndexChartBar("QQQQQQ") ' Last used index. Hopefully nobody will make a row named QQQ :o)
             For Each bar As ChartBarDate In bars
-                grfx.DrawLine(lineColor, 0, barStartTop + (barHeight * index) + (barSpace * index), width, barStartTop + (barHeight * index) + (barSpace * index))
+                'grfx.DrawLine(lineColor, 0, barStartTop + (barHeight * index) + (barSpace * index), width, barStartTop + (barHeight * index) + (barSpace * index))
             Next
         Next
 

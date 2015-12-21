@@ -12,13 +12,15 @@ C:\Users\devilstan\Downloads\Gantt_Chart_Tester\Gantt Chart Tester\obj\Debug\Tes
 C:\Users\devilstan\Downloads\Gantt_Chart_Tester\Gantt Chart Tester\bin\Debug\TestApplication.exe.config
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\TestApplication.vbprojResolveAssemblyReference.cache
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\TestApplication.vbproj.GenerateResource.Cache
-C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan.exe.config
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.Form1.resources
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.GanttChart.resources
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.Resources.resources
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan.exe
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan.pdb
-C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan.xml
-C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.exe
-C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.xml
-C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.pdb
+C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan_dev.exe.config
+C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan_dev.exe
+C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan_dev.pdb
+C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan_dev.xml
+C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan_dev.exe
+C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan_dev.xml
+C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan_dev.pdb

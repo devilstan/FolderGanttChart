@@ -60,10 +60,10 @@ Public Class Form1
                             xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
                         Finally
                             If xNodeList.Count > 0 Then
-                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1), CType(xNodeList.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList.Item(xNodeList.Count - 1), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, rowindex))
+                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1), CType(xNodeList.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList.Item(xNodeList.Count - 1), XmlElement).GetAttribute("time"), Color.FromArgb(245, 203, 92), Color.FromArgb(245, 203, 92), rowindex))
                             Else
                                 Dim theday As Date = "#" & (CType(xNodeTemp, XmlElement).GetAttribute("create")) & "#"
-                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1), theday.ToString("yyyy.MM.dd"), theday.ToString("yyyy.MM.dd"), Color.Aqua, Color.Khaki, rowindex))
+                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1), theday.ToString("yyyy.MM.dd"), theday.ToString("yyyy.MM.dd"), Color.FromArgb(245, 203, 92), Color.FromArgb(245, 203, 92), rowindex))
                             End If
                         End Try
                         rowindex = rowindex + 1
@@ -207,38 +207,6 @@ Public Class Form1
         MsgBox("Picture saved", MsgBoxStyle.Information)
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        FileSystemWatcher1 = New System.IO.FileSystemWatcher()
-
-        'this is the path we want to monitor
-        FileSystemWatcher1.Path = rootDIR
-
-        'Add a list of Filter we want to specify
-        'make sure you use OR for each Filter as we need to
-        'all of those 
-
-        FileSystemWatcher1.NotifyFilter = IO.NotifyFilters.DirectoryName
-        FileSystemWatcher1.NotifyFilter = FileSystemWatcher1.NotifyFilter Or IO.NotifyFilters.FileName
-        FileSystemWatcher1.NotifyFilter = FileSystemWatcher1.NotifyFilter Or IO.NotifyFilters.Attributes
-
-        ' add the handler to each event
-        AddHandler FileSystemWatcher1.Changed, AddressOf logchange
-        AddHandler FileSystemWatcher1.Created, AddressOf logchange
-        AddHandler FileSystemWatcher1.Deleted, AddressOf logchange
-
-        ' add the rename handler as the signature is different
-        AddHandler FileSystemWatcher1.Renamed, AddressOf logrename
-
-        'Set this property to true to start watching
-        FileSystemWatcher1.EnableRaisingEvents = True
-        FileSystemWatcher1.IncludeSubdirectories = True
-
-        Button1.Enabled = False
-        Button2.Enabled = True
-
-        'End of code for btn_start_click
-    End Sub
-
     Private Sub logchange(ByVal source As Object, ByVal e As System.IO.FileSystemEventArgs)
         Dim temparr As String()
         Dim subfolder As String
@@ -276,27 +244,6 @@ Public Class Form1
         MsgBox("rename")
         'txt_folderactivity.Text &= "File" & e.OldName &
         '              " has been renamed to " & e.Name & vbCrLf
-    End Sub
-
-    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
-        ' Stop watching the folder
-        FileSystemWatcher1.EnableRaisingEvents = False
-        Button1.Enabled = True
-        Button2.Enabled = False
-    End Sub
-
-    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
-        Dim objReader As New StreamReader("test.txt")
-        Dim sLine As String = ""
-        Dim arrText As New ArrayList()
-        Do
-            sLine = objReader.ReadLine()
-            If Not sLine Is Nothing Then
-                arrText.Add(sLine)
-            End If
-        Loop Until sLine Is Nothing
-        objReader.Close()
-        UpdateUI(GanttChart1)
     End Sub
 
     Private Delegate Sub UpdateUICallBack(ByVal GanttChart1 As Control)
@@ -425,10 +372,6 @@ Public Class Form1
             End Try
 
         End If
-    End Sub
-
-    Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-        'writelogxml("test")
     End Sub
 
     Private Sub Form1_SizeChanged(sender As Object, e As EventArgs) Handles Me.SizeChanged
