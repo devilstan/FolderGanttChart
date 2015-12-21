@@ -32,9 +32,10 @@ Partial Class Form1
         Me.Button2 = New System.Windows.Forms.Button()
         Me.FileSystemWatcher1 = New System.IO.FileSystemWatcher()
         Me.Button3 = New System.Windows.Forms.Button()
-        Me.GanttChart2 = New TestApplication.GanttChart()
-        Me.GanttChart1 = New TestApplication.GanttChart()
         Me.Button4 = New System.Windows.Forms.Button()
+        Me.GanttChart2 = New gangan.GanttChart()
+        Me.GanttChart1 = New gangan.GanttChart()
+        Me.NotifyIcon1 = New System.Windows.Forms.NotifyIcon(Me.components)
         Me.ContextMenuGanttChart1.SuspendLayout()
         Me.ContextMenuGanttChart2.SuspendLayout()
         CType(Me.FileSystemWatcher1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -97,6 +98,15 @@ Partial Class Form1
         Me.Button3.Text = "Button3"
         Me.Button3.UseVisualStyleBackColor = True
         '
+        'Button4
+        '
+        Me.Button4.Location = New System.Drawing.Point(469, 280)
+        Me.Button4.Name = "Button4"
+        Me.Button4.Size = New System.Drawing.Size(75, 46)
+        Me.Button4.TabIndex = 5
+        Me.Button4.Text = "Button4"
+        Me.Button4.UseVisualStyleBackColor = True
+        '
         'GanttChart2
         '
         Me.GanttChart2.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
@@ -140,14 +150,11 @@ Partial Class Form1
         Me.GanttChart1.ToolTipText = CType(resources.GetObject("GanttChart1.ToolTipText"), System.Collections.Generic.List(Of String))
         Me.GanttChart1.ToolTipTextTitle = ""
         '
-        'Button4
+        'NotifyIcon1
         '
-        Me.Button4.Location = New System.Drawing.Point(469, 280)
-        Me.Button4.Name = "Button4"
-        Me.Button4.Size = New System.Drawing.Size(75, 46)
-        Me.Button4.TabIndex = 5
-        Me.Button4.Text = "Button4"
-        Me.Button4.UseVisualStyleBackColor = True
+        Me.NotifyIcon1.Icon = CType(resources.GetObject("NotifyIcon1.Icon"), System.Drawing.Icon)
+        Me.NotifyIcon1.Text = "NotifyIcon1"
+        Me.NotifyIcon1.Visible = True
         '
         'Form1
         '
@@ -171,8 +178,8 @@ Partial Class Form1
         Me.ResumeLayout(False)
 
     End Sub
-    Friend WithEvents GanttChart1 As TestApplication.GanttChart
-    Friend WithEvents GanttChart2 As TestApplication.GanttChart
+    Friend WithEvents GanttChart1 As gangan.GanttChart
+    Friend WithEvents GanttChart2 As gangan.GanttChart
     Friend WithEvents ContextMenuGanttChart2 As System.Windows.Forms.ContextMenuStrip
     Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ContextMenuGanttChart1 As System.Windows.Forms.ContextMenuStrip
@@ -182,4 +189,5 @@ Partial Class Form1
     Friend WithEvents FileSystemWatcher1 As IO.FileSystemWatcher
     Friend WithEvents Button3 As Button
     Friend WithEvents Button4 As Button
+    Friend WithEvents NotifyIcon1 As NotifyIcon
 End Class

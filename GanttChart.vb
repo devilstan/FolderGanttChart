@@ -1151,13 +1151,14 @@ Public Class GanttChart
         scrollPosition = 0
 
         ' Used for when the Gantt Chart is saved as an image
+        If Me.Width > 0 Then
+            If lastLineStop > 0 Then
+                objBmp = New Bitmap(Me.Width - barStartRight, lastLineStop, Imaging.PixelFormat.Format24bppRgb)
+                objGraphics = Graphics.FromImage(objBmp)
+            End If
 
-        If lastLineStop > 0 Then
-            objBmp = New Bitmap(Me.Width - barStartRight, lastLineStop, Imaging.PixelFormat.Format24bppRgb)
-            objGraphics = Graphics.FromImage(objBmp)
+            PaintChart()
         End If
-
-        PaintChart()
     End Sub
 
 #End Region
