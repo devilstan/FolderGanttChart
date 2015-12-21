@@ -1,4 +1,4 @@
-﻿Imports System
+Imports System
 Imports System.IO
 Imports System.Diagnostics
 Imports System.Collections
@@ -18,6 +18,8 @@ Public Class Form1
             Dim xRoot As XmlNode
             Dim xNodeList As XmlNodeList
             Dim xNodeTemp As XmlNode
+            Dim xChildElement As XmlElement
+
             Dim lst As New List(Of BarInformation)
             Try
                 '讀取 XML
@@ -25,12 +27,25 @@ Public Class Form1
                 xRoot = CType(xdoc.DocumentElement, XmlNode)
                 '選擇 section
                 Dim rowindex As Integer = 0
-                For Each Dir As String In Directory.GetDirectories("C:\Users\devilstan\Downloads\BT\0816ftn026")
+                For Each Dir As String In Directory.GetDirectories("D:\workspace\myRepo\H188V040t")
                     Dim dirarr As String()
                     dirarr = Dir.Split("\")
                     xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & dirarr(dirarr.Length - 1) & "']")
-                    xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
-                    If xNodeList.Count > 0 Then lst.Add(New BarInformation(Dir, CType(xNodeList.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList.Item(xNodeList.Count - 1), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, rowindex))
+                    If xNodeTemp Is Nothing Then
+                        '在 sections 下寫入一個節點名稱為 section(第 1 層)
+                        xChildElement = xdoc.CreateElement("folder")
+                        xChildElement.SetAttribute("name", dirarr(dirarr.Length - 1))
+                        xChildElement.SetAttribute("create", Directory.GetCreationTime(Dir))
+                        xRoot.AppendChild(xChildElement)
+                        xdoc.Save("XML_log.xml")
+                    Else
+                        xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
+                        If xNodeList.Count > 0 Then
+                            lst.Add(New BarInformation(dirarr(dirarr.Length - 1), CType(xNodeList.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList.Item(xNodeList.Count - 1), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, rowindex))
+                        Else
+                            lst.Add(New BarInformation(dirarr(dirarr.Length - 1), CType(xNodeTemp, XmlElement).GetAttribute("create"), CType(xNodeTemp, XmlElement).GetAttribute("create"), Color.Aqua, Color.Khaki, rowindex))
+                        End If
+                    End If
                     rowindex = rowindex + 1
                 Next
 
