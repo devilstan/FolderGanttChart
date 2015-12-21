@@ -15,8 +15,6 @@ C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.Form1.resources
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.GanttChart.resources
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\obj\Debug\gangan.Resources.resources
-C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan.exe
-C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan.pdb
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan_dev.exe.config
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan_dev.exe
 C:\Users\devilstan\Documents\Visual Studio 2015\Projects\Gantt Chart Tester\bin\Debug\gangan_dev.pdb

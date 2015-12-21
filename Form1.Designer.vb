@@ -108,7 +108,7 @@ Partial Class Form1
         Me.GanttChart1.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.GanttChart1.Name = "GanttChart1"
         Me.GanttChart1.RowFont = New System.Drawing.Font("微軟正黑體", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(136, Byte))
-        Me.GanttChart1.Size = New System.Drawing.Size(676, 244)
+        Me.GanttChart1.Size = New System.Drawing.Size(676, 330)
         Me.GanttChart1.TabIndex = 0
         Me.GanttChart1.Text = "GanttChart1"
         Me.GanttChart1.TimeFont = New System.Drawing.Font("微軟正黑體", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))

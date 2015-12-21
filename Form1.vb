@@ -7,7 +7,7 @@ Imports System.ComponentModel
 
 Public Class Form1
 
-    Dim rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
+    Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         If My.Application.CommandLineArgs.Count > 0 Then
@@ -20,9 +20,9 @@ Public Class Form1
         Randomize()
 
         With GanttChart1
-            .RowFont = New Font("Arial", 8.0, FontStyle.Regular, GraphicsUnit.Point)
-            .FromDate = New Date(2015, 12, 12, 0, 0, 0)
-            .ToDate = New Date(2015, 12, 31, 0, 0, 0)
+            .RowFont = New Font("微軟正黑體", 8.0, FontStyle.Regular, GraphicsUnit.Point)
+            '.FromDate = New Date(2015, 12, 12, 0, 0, 0)
+            .ToDate = Date.Now 'New Date(2015, 12, 31, 0, 0, 0)
 
             Dim xdoc As XmlDocument = New XmlDocument
             Dim xRoot As XmlNode
@@ -38,6 +38,7 @@ Public Class Form1
                     '讀取 XML
                     xdoc.Load(rootDIR & "\XML_log.xml")
                     xRoot = CType(xdoc.DocumentElement, XmlNode)
+                    .FromDate = CType(xdoc.DocumentElement, XmlElement).GetAttribute("create")
                     '選擇 section
                     Dim rowindex As Integer = 0
                     For Each Dir As String In Directory.GetDirectories(rootDIR)
@@ -71,13 +72,17 @@ Public Class Form1
                     retry = False
                 Catch ex As Exception
                     MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
+                    Dim dirarr As String()
+                    dirarr = rootDIR.Split("\")
+                    Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
                     '建立一個 XmlDocument 物件並加入 Declaration
                     xdoc = New XmlDocument
                     xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
                     '建立根節點物件並加入 XmlDocument 中 (第 0 層)
                     xElement = xdoc.CreateElement("root")
                     '在 sections 寫入一個屬性
-                    xElement.SetAttribute("name", "H123")
+                    xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
+                    xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                     xdoc.AppendChild(xElement)
                     xdoc.Save(rootDIR & "\XML_log.xml")
                     retry = True
@@ -273,18 +278,18 @@ Public Class Form1
                         xNodeTemp = xNodeList.Item(intI)
                         xNodeList2 = xNodeTemp.SelectNodes("log[@time!='']")
                         If CType(xNodeTemp, XmlElement).GetAttribute("create") = "" Then
-                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"), Date.Now.ToString("yyyy.MM.dd"), Date.Now.ToString("yyyy.MM.dd"), Color.Aqua, Color.Khaki, intI))
+                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"), Date.Now.ToString("yyyy.MM.dd"), Date.Now.ToString("yyyy.MM.dd"), Color.FromArgb(245, 203, 92), Color.FromArgb(245, 203, 92), intI))
                         Else
-                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"), CType(xNodeTemp, XmlElement).GetAttribute("create"), CType(xNodeTemp, XmlElement).GetAttribute("create"), Color.Aqua, Color.Khaki, intI))
+                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"), CType(xNodeTemp, XmlElement).GetAttribute("create"), CType(xNodeTemp, XmlElement).GetAttribute("create"), Color.FromArgb(245, 203, 92), Color.FromArgb(245, 203, 92), intI))
                         End If
 
                         Select Case xNodeList2.Count
                             Case 0
                                 'lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeTemp, XmlElement).GetAttribute("create"), CType(xNodeTemp, XmlElement).GetAttribute("create"), Color.Aqua, Color.Khaki, intI))
                             Case 1
-                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, intI))
+                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), Color.FromArgb(245, 203, 92), Color.FromArgb(245, 203, 92), intI))
                             Case Else
-                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList2.Item(xNodeList2.Count - 1), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, intI))
+                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList2.Item(xNodeList2.Count - 1), XmlElement).GetAttribute("time"), Color.FromArgb(245, 203, 92), Color.FromArgb(245, 203, 92), intI))
                         End Select
                     Next
 
@@ -350,13 +355,17 @@ Public Class Form1
             Dim xChildElement As XmlElement
             Dim xElement2 As XmlElement
             Try
+                Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
+                Dim dirarr As String()
+                dirarr = rootDIR.Split("\")
                 '建立一個 XmlDocument 物件並加入 Declaration
                 xdoc = New XmlDocument
                 xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
                 '建立根節點物件並加入 XmlDocument 中 (第 0 層)
                 xElement = xdoc.CreateElement("root")
                 '在 sections 寫入一個屬性
-                xElement.SetAttribute("name", "H123")
+                xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
+                xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                 xdoc.AppendChild(xElement)
                 '在 sections 下寫入一個節點名稱為 section(第 1 層)
                 'xChildElement = xdoc.CreateElement("folder")
@@ -390,9 +399,9 @@ Public Class Form1
     End Sub
 
     Private Sub Form1_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
-        Me.WindowState = FormWindowState.Minimized
-        Me.Visible = False
-        Me.NotifyIcon1.Visible = True
-        e.Cancel = True
+        'Me.WindowState = FormWindowState.Minimized
+        'Me.Visible = False
+        'Me.NotifyIcon1.Visible = True
+        'e.Cancel = True
     End Sub
 End Class
