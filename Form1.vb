@@ -8,7 +8,8 @@ Imports System.ComponentModel
 Public Class Form1
     Private WithEvents myfswFileWatcher As AdvancedFileSystemWatcher
 
-    Public rootDIR As String = "C:\SCAN" '"D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
+    'Public rootDIR As String = "C:\SCAN" '"D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
+    Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         If My.Application.CommandLineArgs.Count > 0 Then
