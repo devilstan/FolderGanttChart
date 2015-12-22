@@ -1,4 +1,4 @@
-﻿Imports System
+Imports System
 Imports System.IO
 Imports System.Diagnostics
 Imports System.Collections
@@ -6,8 +6,10 @@ Imports System.Xml
 Imports System.ComponentModel
 
 Public Class Form1
+    Private WithEvents myfswFileWatcher As AdvancedFileSystemWatcher
 
-    Dim rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
+    'Public rootDIR As String = "C:\SCAN" '"D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
+    Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         If My.Application.CommandLineArgs.Count > 0 Then
@@ -20,14 +22,14 @@ Public Class Form1
         Randomize()
 
         With GanttChart1
-            .RowFont = New Font("Arial", 8.0, FontStyle.Regular, GraphicsUnit.Point)
-            .FromDate = New Date(2015, 12, 12, 0, 0, 0)
-            .ToDate = New Date(2015, 12, 31, 0, 0, 0)
+            .RowFont = New Font("微軟正黑體", 8.0, FontStyle.Regular, GraphicsUnit.Point)
+            '.FromDate = New Date(2015, 12, 12, 0, 0, 0)
+            .ToDate = Date.Now 'New Date(2015, 12, 31, 0, 0, 0)
 
             Dim xdoc As XmlDocument = New XmlDocument
             Dim xRoot As XmlNode
             Dim xNodeList As XmlNodeList = Nothing
-            Dim xNodeTemp As XmlNode
+            Dim xNodeTemp As XmlNode = Nothing
             Dim xChildElement As XmlElement
             Dim xElement As XmlElement
 
@@ -38,6 +40,7 @@ Public Class Form1
                     '讀取 XML
                     xdoc.Load(rootDIR & "\XML_log.xml")
                     xRoot = CType(xdoc.DocumentElement, XmlNode)
+                    .FromDate = CType(xdoc.DocumentElement, XmlElement).GetAttribute("create")
                     '選擇 section
                     Dim rowindex As Integer = 0
                     For Each Dir As String In Directory.GetDirectories(rootDIR)
@@ -46,6 +49,13 @@ Public Class Form1
 
                         Try
                             xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & dirarr(dirarr.Length - 1) & "']")
+                            If Not xNodeTemp Is Nothing Then
+                                Dim theday As Date = "#" & (CType(xNodeTemp, XmlElement).GetAttribute("create")) & "#"
+                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1),
+                                                           theday.ToString("yyyy.MM.dd"),
+                                                           theday.ToString("yyyy.MM.dd"),
+                                                           Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), rowindex))
+                            End If
                             xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
                         Catch ex As Exception
                             '如果xml找不到子目錄
@@ -56,28 +66,40 @@ Public Class Form1
                             xChildElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                             xRoot.AppendChild(xChildElement)
                             xdoc.Save(rootDIR & "\XML_log.xml")
+                            Threading.Thread.Sleep(500)
                             xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & dirarr(dirarr.Length - 1) & "']")
                             xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
                         Finally
                             If xNodeList.Count > 0 Then
-                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1), CType(xNodeList.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList.Item(xNodeList.Count - 1), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, rowindex))
+                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1),
+                                                           CType(xNodeList.Item(0), XmlElement).GetAttribute("time"),
+                                                           CType(xNodeList.Item(xNodeList.Count - 1), XmlElement).GetAttribute("time"),
+                                                           Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), rowindex))
                             Else
                                 Dim theday As Date = "#" & (CType(xNodeTemp, XmlElement).GetAttribute("create")) & "#"
-                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1), theday.ToString("yyyy.MM.dd"), theday.ToString("yyyy.MM.dd"), Color.Aqua, Color.Khaki, rowindex))
+                                lst.Add(New BarInformation(dirarr(dirarr.Length - 1),
+                                                           theday.ToString("yyyy.MM.dd"),
+                                                           theday.ToString("yyyy.MM.dd"),
+                                                           Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), rowindex))
                             End If
                         End Try
                         rowindex = rowindex + 1
                     Next
                     retry = False
                 Catch ex As Exception
-                    MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
+                    MessageBox.Show("初次監控執行，將在目錄下建立記錄檔 XML_log.xml")
+                    'MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
+                    Dim dirarr As String()
+                    dirarr = rootDIR.Split("\")
+                    Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
                     '建立一個 XmlDocument 物件並加入 Declaration
                     xdoc = New XmlDocument
                     xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
                     '建立根節點物件並加入 XmlDocument 中 (第 0 層)
                     xElement = xdoc.CreateElement("root")
                     '在 sections 寫入一個屬性
-                    xElement.SetAttribute("name", "H123")
+                    xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
+                    xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                     xdoc.AppendChild(xElement)
                     xdoc.Save(rootDIR & "\XML_log.xml")
                     retry = True
@@ -118,7 +140,8 @@ Public Class Form1
                     End If
 
 
-                    lst.Add(New BarInformation("Row " & i + 1, New Date(2007, 12, 24, startHour, startMinute, 0), New Date(2007, 12, 24, endHour, endMinute, 0), Color.Maroon, Color.Khaki, i))
+                    lst.Add(New BarInformation("Row " & i + 1, New Date(2007, 12, 24, startHour, startMinute, 0),
+                                               New Date(2007, 12, 24, endHour, endMinute, 0), Color.Maroon, Color.Khaki, i))
                 Next
 
                 For Each bar As BarInformation In lst
@@ -126,30 +149,52 @@ Public Class Form1
                 Next
             End With
         End If
-        FileSystemWatcher1 = New System.IO.FileSystemWatcher()
+        FileSystemWatcher1 = New System.IO.FileSystemWatcher()  'local monitor
+        myfswFileWatcher = New AdvancedFileSystemWatcher(5000)  'network monitor
+        If True Then
+            'this is the path we want to monitor
+            myfswFileWatcher.Path = rootDIR
 
-        'this is the path we want to monitor
-        FileSystemWatcher1.Path = rootDIR
+            'Add a list of Filter we want to specify
+            'make sure you use OR for each Filter as we need to
+            'all of those 
 
-        'Add a list of Filter we want to specify
-        'make sure you use OR for each Filter as we need to
-        'all of those 
 
-        FileSystemWatcher1.NotifyFilter = IO.NotifyFilters.DirectoryName
-        FileSystemWatcher1.NotifyFilter = FileSystemWatcher1.NotifyFilter Or IO.NotifyFilters.FileName
-        FileSystemWatcher1.NotifyFilter = FileSystemWatcher1.NotifyFilter Or IO.NotifyFilters.Attributes
+            ' add the handler to each event
+            AddHandler myfswFileWatcher.Changed, AddressOf logchange
+            AddHandler myfswFileWatcher.Created, AddressOf logchange
+            AddHandler myfswFileWatcher.Deleted, AddressOf logchange
 
-        ' add the handler to each event
-        AddHandler FileSystemWatcher1.Changed, AddressOf logchange
-        AddHandler FileSystemWatcher1.Created, AddressOf logchange
-        AddHandler FileSystemWatcher1.Deleted, AddressOf logchange
+            ' add the rename handler as the signature is different
+            AddHandler myfswFileWatcher.Renamed, AddressOf logrename
 
-        ' add the rename handler as the signature is different
-        AddHandler FileSystemWatcher1.Renamed, AddressOf logrename
+            'Start the filewatcher watching for files.
+            myfswFileWatcher.EnableRaisingEvents = True
+            myfswFileWatcher.IncludeSubdirectories = True
+        Else
+            'this is the path we want to monitor
+            FileSystemWatcher1.Path = rootDIR
 
-        'Set this property to true to start watching
-        FileSystemWatcher1.EnableRaisingEvents = True
-        FileSystemWatcher1.IncludeSubdirectories = True
+            'Add a list of Filter we want to specify
+            'make sure you use OR for each Filter as we need to
+            'all of those 
+            FileSystemWatcher1.NotifyFilter = IO.NotifyFilters.DirectoryName
+            FileSystemWatcher1.NotifyFilter = FileSystemWatcher1.NotifyFilter Or IO.NotifyFilters.FileName
+            FileSystemWatcher1.NotifyFilter = FileSystemWatcher1.NotifyFilter Or IO.NotifyFilters.Attributes
+
+            ' add the handler to each event
+            AddHandler FileSystemWatcher1.Changed, AddressOf logchange
+            AddHandler FileSystemWatcher1.Created, AddressOf logchange
+            AddHandler FileSystemWatcher1.Deleted, AddressOf logchange
+
+            ' add the rename handler as the signature is different
+            AddHandler FileSystemWatcher1.Renamed, AddressOf logrename
+
+            'Set this property to true to start watching
+            FileSystemWatcher1.EnableRaisingEvents = True
+            FileSystemWatcher1.IncludeSubdirectories = True
+        End If
+
     End Sub
 
     Private Sub GanttChart1_MouseMove(ByVal sender As System.Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles GanttChart1.MouseMove
@@ -207,38 +252,6 @@ Public Class Form1
         MsgBox("Picture saved", MsgBoxStyle.Information)
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        FileSystemWatcher1 = New System.IO.FileSystemWatcher()
-
-        'this is the path we want to monitor
-        FileSystemWatcher1.Path = rootDIR
-
-        'Add a list of Filter we want to specify
-        'make sure you use OR for each Filter as we need to
-        'all of those 
-
-        FileSystemWatcher1.NotifyFilter = IO.NotifyFilters.DirectoryName
-        FileSystemWatcher1.NotifyFilter = FileSystemWatcher1.NotifyFilter Or IO.NotifyFilters.FileName
-        FileSystemWatcher1.NotifyFilter = FileSystemWatcher1.NotifyFilter Or IO.NotifyFilters.Attributes
-
-        ' add the handler to each event
-        AddHandler FileSystemWatcher1.Changed, AddressOf logchange
-        AddHandler FileSystemWatcher1.Created, AddressOf logchange
-        AddHandler FileSystemWatcher1.Deleted, AddressOf logchange
-
-        ' add the rename handler as the signature is different
-        AddHandler FileSystemWatcher1.Renamed, AddressOf logrename
-
-        'Set this property to true to start watching
-        FileSystemWatcher1.EnableRaisingEvents = True
-        FileSystemWatcher1.IncludeSubdirectories = True
-
-        Button1.Enabled = False
-        Button2.Enabled = True
-
-        'End of code for btn_start_click
-    End Sub
-
     Private Sub logchange(ByVal source As Object, ByVal e As System.IO.FileSystemEventArgs)
         Dim temparr As String()
         Dim subfolder As String
@@ -278,27 +291,6 @@ Public Class Form1
         '              " has been renamed to " & e.Name & vbCrLf
     End Sub
 
-    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
-        ' Stop watching the folder
-        FileSystemWatcher1.EnableRaisingEvents = False
-        Button1.Enabled = True
-        Button2.Enabled = False
-    End Sub
-
-    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
-        Dim objReader As New StreamReader("test.txt")
-        Dim sLine As String = ""
-        Dim arrText As New ArrayList()
-        Do
-            sLine = objReader.ReadLine()
-            If Not sLine Is Nothing Then
-                arrText.Add(sLine)
-            End If
-        Loop Until sLine Is Nothing
-        objReader.Close()
-        UpdateUI(GanttChart1)
-    End Sub
-
     Private Delegate Sub UpdateUICallBack(ByVal GanttChart1 As Control)
 
     Private Sub UpdateUI(ByVal c As Control)
@@ -326,18 +318,29 @@ Public Class Form1
                         xNodeTemp = xNodeList.Item(intI)
                         xNodeList2 = xNodeTemp.SelectNodes("log[@time!='']")
                         If CType(xNodeTemp, XmlElement).GetAttribute("create") = "" Then
-                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"), Date.Now.ToString("yyyy.MM.dd"), Date.Now.ToString("yyyy.MM.dd"), Color.Aqua, Color.Khaki, intI))
+                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"),
+                                                       Date.Now.ToString("yyyy.MM.dd"), Date.Now.ToString("yyyy.MM.dd"),
+                                                       Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
                         Else
-                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"), CType(xNodeTemp, XmlElement).GetAttribute("create"), CType(xNodeTemp, XmlElement).GetAttribute("create"), Color.Aqua, Color.Khaki, intI))
+                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"),
+                                                       CType(xNodeTemp, XmlElement).GetAttribute("create"),
+                                                       CType(xNodeTemp, XmlElement).GetAttribute("create"),
+                                                       Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
                         End If
 
                         Select Case xNodeList2.Count
                             Case 0
                                 'lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeTemp, XmlElement).GetAttribute("create"), CType(xNodeTemp, XmlElement).GetAttribute("create"), Color.Aqua, Color.Khaki, intI))
                             Case 1
-                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, intI))
+                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"),
+                                                           CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"),
+                                                           CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"),
+                                                           Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
                             Case Else
-                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"), CType(xNodeList2.Item(xNodeList2.Count - 1), XmlElement).GetAttribute("time"), Color.Aqua, Color.Khaki, intI))
+                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"),
+                                                           CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"),
+                                                           CType(xNodeList2.Item(xNodeList2.Count - 1), XmlElement).GetAttribute("time"),
+                                                           Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
                         End Select
                     Next
 
@@ -403,13 +406,17 @@ Public Class Form1
             Dim xChildElement As XmlElement
             Dim xElement2 As XmlElement
             Try
+                Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
+                Dim dirarr As String()
+                dirarr = rootDIR.Split("\")
                 '建立一個 XmlDocument 物件並加入 Declaration
                 xdoc = New XmlDocument
                 xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
                 '建立根節點物件並加入 XmlDocument 中 (第 0 層)
                 xElement = xdoc.CreateElement("root")
                 '在 sections 寫入一個屬性
-                xElement.SetAttribute("name", "H123")
+                xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
+                xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                 xdoc.AppendChild(xElement)
                 '在 sections 下寫入一個節點名稱為 section(第 1 層)
                 'xChildElement = xdoc.CreateElement("folder")
@@ -425,10 +432,6 @@ Public Class Form1
             End Try
 
         End If
-    End Sub
-
-    Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-        'writelogxml("test")
     End Sub
 
     Private Sub Form1_SizeChanged(sender As Object, e As EventArgs) Handles Me.SizeChanged
@@ -447,9 +450,9 @@ Public Class Form1
     End Sub
 
     Private Sub Form1_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
-        Me.WindowState = FormWindowState.Minimized
-        Me.Visible = False
-        Me.NotifyIcon1.Visible = True
-        e.Cancel = True
+        'Me.WindowState = FormWindowState.Minimized
+        'Me.Visible = False
+        'Me.NotifyIcon1.Visible = True
+        'e.Cancel = True
     End Sub
 End Class

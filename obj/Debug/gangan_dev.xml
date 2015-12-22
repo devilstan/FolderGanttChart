@@ -2,10 +2,24 @@
 <doc>
 <assembly>
 <name>
-gangan
+gangan_dev
 </name>
 </assembly>
 <members>
+<member name="M:gangan.AdvancedFileSystemWatcher.#ctor">
+ <summary>
+ Default constructor
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="M:gangan.AdvancedFileSystemWatcher._myTimer_Elapsed(System.Object,System.Timers.ElapsedEventArgs)">
+ <summary>
+ In this sub we will try to determine if the folder exists If not there may be a network error.
+ </summary>
+ <param name="sender"></param>
+ <param name="e"></param>
+ <remarks></remarks>
+</member>
 <member name="T:gangan.GanttChart">
  <summary>
  Adds a Gantt Chart to the form
