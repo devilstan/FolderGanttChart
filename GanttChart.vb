@@ -34,9 +34,9 @@ Public Class GanttChart
     Private _mouseOverRowValue As Object = Nothing
 
     Private lineColor As Pen = Pens.Bisque
-    Private dateTextFont As Font = New Font("·L³n¥¿¶ÂÅé", 8.0, FontStyle.Regular, GraphicsUnit.Point)
-    Private timeTextFont As Font = New Font("·L³n¥¿¶ÂÅé", 8.0, FontStyle.Regular, GraphicsUnit.Point)
-    Private rowTextFont As Font = New Font("·L³n¥¿¶ÂÅé", 8.0, FontStyle.Regular, GraphicsUnit.Point)
+    Private dateTextFont As Font = New Font("å¾®è»Ÿæ­£é»‘é«”", 8.0, FontStyle.Regular, GraphicsUnit.Point)
+    Private timeTextFont As Font = New Font("å¾®è»Ÿæ­£é»‘é«”", 8.0, FontStyle.Regular, GraphicsUnit.Point)
+    Private rowTextFont As Font = New Font("å¾®è»Ÿæ­£é»‘é«”", 8.0, FontStyle.Regular, GraphicsUnit.Point)
 
     Friend WithEvents ToolTip As New System.Windows.Forms.ToolTip()
 
@@ -269,7 +269,7 @@ Public Class GanttChart
         bar.HideFromMouseMove = hideFromMouseMove
         bars.Add(bar)
 
-        SetBarStartLeft(rowtext)
+        SetBarStartLeft(rowText)
     End Sub
 
     ''' <summary>
@@ -520,16 +520,18 @@ Public Class GanttChart
 
                     ' Makes the bar gradient
 
-                    obBrush = New LinearGradientBrush(obRect, color, color.Gray, LinearGradientMode.Vertical)
+                    obBrush = New LinearGradientBrush(obRect, color, color, LinearGradientMode.Vertical)
 
                     ' Draws the bar
 
-                    grfx.DrawRectangle(Pens.Black, obRect)
+                    'grfx.DrawRectangle(Pens.Black, obRect)
+                    grfx.DrawRectangle(New Pen(color), obRect)
                     grfx.FillRectangle(obBrush, obRect)
 
                     ' Draws the rowtext
 
-                    grfx.DrawString(bar.Text, rowTextFont, Brushes.Black, 0, barStartTop + (barHeight * (index - scrollPos)) + (barSpace * (index - scrollPos)))
+                    'grfx.DrawString(bar.Text, rowTextFont, Brushes.Black, 0, barStartTop + (barHeight * (index - scrollPos)) + (barSpace * (index - scrollPos)))
+                    grfx.DrawString(bar.Text, rowTextFont, New SolidBrush(Color.FromArgb(51, 53, 51)), 0, barStartTop + (barHeight * (index - scrollPos)) + (barSpace * (index - scrollPos)))
 
                     obBrush = Nothing
                     obRect = Nothing
@@ -564,13 +566,19 @@ Public Class GanttChart
                 headerLocationY = headerTimeStartTop
             End If
 
-            grfx.DrawLine(Pens.Bisque, barStartLeft + (index * widthPerItem), headerLocationY, barStartLeft + (index * widthPerItem), lastLineStop)
+            'grfx.DrawLine(Pens.Bisque, barStartLeft + (index * widthPerItem), headerLocationY, barStartLeft + (index * widthPerItem), lastLineStop)
+            grfx.DrawLine(New Pen(Color.FromArgb(200, 180, 200), 1.0F),
+                          barStartLeft + (index * widthPerItem), headerLocationY,
+                          barStartLeft + (index * widthPerItem), lastLineStop)
             index += 1
 
             lastHeader = header
         Next
 
-        grfx.DrawLine(lineColor, barStartLeft + (index * widthPerItem), headerTimeStartTop, barStartLeft + (index * widthPerItem), lastLineStop)
+        'grfx.DrawLine(lineColor,
+        grfx.DrawLine(New Pen(Color.FromArgb(200, 180, 200), 2.5F),
+                      barStartLeft + (index * widthPerItem), headerTimeStartTop,
+                      barStartLeft + (index * widthPerItem), lastLineStop)
     End Sub
 
     ''' <summary>
@@ -588,7 +596,7 @@ Public Class GanttChart
 
         For index = 0 To GetIndexChartBar("QQQQQQ") ' Last used index. Hopefully nobody will make a row named QQQ :o)
             For Each bar As ChartBarDate In bars
-                grfx.DrawLine(lineColor, 0, barStartTop + (barHeight * index) + (barSpace * index), width, barStartTop + (barHeight * index) + (barSpace * index))
+                'grfx.DrawLine(lineColor, 0, barStartTop + (barHeight * index) + (barSpace * index), width, barStartTop + (barHeight * index) + (barSpace * index))
             Next
         Next
 
@@ -1151,13 +1159,14 @@ Public Class GanttChart
         scrollPosition = 0
 
         ' Used for when the Gantt Chart is saved as an image
+        If Me.Width > 0 Then
+            If lastLineStop > 0 Then
+                objBmp = New Bitmap(Me.Width - barStartRight, lastLineStop, Imaging.PixelFormat.Format24bppRgb)
+                objGraphics = Graphics.FromImage(objBmp)
+            End If
 
-        If lastLineStop > 0 Then
-            objBmp = New Bitmap(Me.Width - barStartRight, lastLineStop, Imaging.PixelFormat.Format24bppRgb)
-            objGraphics = Graphics.FromImage(objBmp)
+            PaintChart()
         End If
-
-        PaintChart()
     End Sub
 
 #End Region
