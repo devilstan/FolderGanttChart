@@ -53,7 +53,7 @@ Public Class Form1
                                 Dim theday As Date = "#" & (CType(xNodeTemp, XmlElement).GetAttribute("create")) & "#"
                                 lst.Add(New BarInformation(dirarr(dirarr.Length - 1),
                                                            theday.ToString("yyyy.MM.dd"),
-                                                           theday.ToString("yyyy.MM.dd"),
+                                                           theday.AddMinutes(5.0F),
                                                            Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), rowindex))
                             End If
                             xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
@@ -79,7 +79,7 @@ Public Class Form1
                                 Dim theday As Date = "#" & (CType(xNodeTemp, XmlElement).GetAttribute("create")) & "#"
                                 lst.Add(New BarInformation(dirarr(dirarr.Length - 1),
                                                            theday.ToString("yyyy.MM.dd"),
-                                                           theday.ToString("yyyy.MM.dd"),
+                                                           theday.AddMinutes(5.0F),
                                                            Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), rowindex))
                             End If
                         End Try

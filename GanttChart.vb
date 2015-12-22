@@ -232,11 +232,21 @@ Public Class GanttChart
 
     Public Sub AddChartBar(ByVal rowText As String, ByVal barValue As Object, ByVal fromTime As Date, ByVal toTime As Date, ByVal color As Color, ByVal hoverColor As Color, ByVal rowIndex As Integer)
         Dim bar As New ChartBarDate
+        Dim colorIdx As Integer = (rowIndex Mod 5)
+        Dim mycolor(4) As Color
+
+
+        mycolor(0) = Color.FromArgb(91, 192, 235)
+        mycolor(1) = Color.FromArgb(253, 231, 76)
+        mycolor(2) = Color.FromArgb(155, 197, 61)
+        mycolor(3) = Color.FromArgb(229, 89, 52)
+        mycolor(4) = Color.FromArgb(250, 121, 33)
+
         bar.Text = rowText
         bar.Value = barValue
         bar.StartValue = fromTime
         bar.EndValue = toTime
-        bar.Color = color
+        bar.Color = mycolor(colorIdx)
         bar.HoverColor = hoverColor
         bar.RowIndex = rowIndex
         bars.Add(bar)
