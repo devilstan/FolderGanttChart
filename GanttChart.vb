@@ -34,9 +34,9 @@ Public Class GanttChart
     Private _mouseOverRowValue As Object = Nothing
 
     Private lineColor As Pen = Pens.Bisque
-    Private dateTextFont As Font = New Font("·L³n¥¿¶ÂÅé", 8.0, FontStyle.Regular, GraphicsUnit.Point)
-    Private timeTextFont As Font = New Font("·L³n¥¿¶ÂÅé", 8.0, FontStyle.Regular, GraphicsUnit.Point)
-    Private rowTextFont As Font = New Font("·L³n¥¿¶ÂÅé", 8.0, FontStyle.Regular, GraphicsUnit.Point)
+    Private dateTextFont As Font = New Font("å¾®è»Ÿæ­£é»‘é«”", 8.0, FontStyle.Regular, GraphicsUnit.Point)
+    Private timeTextFont As Font = New Font("å¾®è»Ÿæ­£é»‘é«”", 8.0, FontStyle.Regular, GraphicsUnit.Point)
+    Private rowTextFont As Font = New Font("å¾®è»Ÿæ­£é»‘é«”", 8.0, FontStyle.Regular, GraphicsUnit.Point)
 
     Friend WithEvents ToolTip As New System.Windows.Forms.ToolTip()
 
@@ -269,7 +269,7 @@ Public Class GanttChart
         bar.HideFromMouseMove = hideFromMouseMove
         bars.Add(bar)
 
-        SetBarStartLeft(rowtext)
+        SetBarStartLeft(rowText)
     End Sub
 
     ''' <summary>
@@ -566,13 +566,19 @@ Public Class GanttChart
                 headerLocationY = headerTimeStartTop
             End If
 
-            grfx.DrawLine(Pens.Bisque, barStartLeft + (index * widthPerItem), headerLocationY, barStartLeft + (index * widthPerItem), lastLineStop)
+            'grfx.DrawLine(Pens.Bisque, barStartLeft + (index * widthPerItem), headerLocationY, barStartLeft + (index * widthPerItem), lastLineStop)
+            grfx.DrawLine(New Pen(Color.FromArgb(200, 180, 200), 1.0F),
+                          barStartLeft + (index * widthPerItem), headerLocationY,
+                          barStartLeft + (index * widthPerItem), lastLineStop)
             index += 1
 
             lastHeader = header
         Next
 
-        grfx.DrawLine(lineColor, barStartLeft + (index * widthPerItem), headerTimeStartTop, barStartLeft + (index * widthPerItem), lastLineStop)
+        'grfx.DrawLine(lineColor,
+        grfx.DrawLine(New Pen(Color.FromArgb(200, 180, 200), 2.5F),
+                      barStartLeft + (index * widthPerItem), headerTimeStartTop,
+                      barStartLeft + (index * widthPerItem), lastLineStop)
     End Sub
 
     ''' <summary>
