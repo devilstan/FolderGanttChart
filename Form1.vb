@@ -43,12 +43,15 @@ Public Class Form1
                     .FromDate = CType(xdoc.DocumentElement, XmlElement).GetAttribute("create")
                     '選擇 section
                     Dim rowindex As Integer = 0
+                    '掃瞄子目錄
                     For Each Dir As String In Directory.GetDirectories(rootDIR)
                         Dim dirarr As String()
                         dirarr = Dir.Split("\")
 
                         Try
+                            '嘗試選擇子目錄
                             xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & dirarr(dirarr.Length - 1) & "']")
+                            '如果子目錄不存在，則建立一個bar條
                             If Not xNodeTemp Is Nothing Then
                                 Dim theday As Date = "#" & (CType(xNodeTemp, XmlElement).GetAttribute("create")) & "#"
                                 lst.Add(New BarInformation(dirarr(dirarr.Length - 1),
@@ -56,6 +59,7 @@ Public Class Form1
                                                            theday.AddMinutes(5.0F),
                                                            Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), rowindex))
                             End If
+                            '嘗試選擇子目錄裡的時間紀錄節點
                             xNodeList = xNodeTemp.SelectNodes("log[@time!='']")
                         Catch ex As Exception
                             '如果xml找不到子目錄
@@ -162,8 +166,8 @@ Public Class Form1
 
             ' add the handler to each event
             AddHandler myfswFileWatcher.Changed, AddressOf logchange
-            AddHandler myfswFileWatcher.Created, AddressOf logchange
-            AddHandler myfswFileWatcher.Deleted, AddressOf logchange
+            'AddHandler myfswFileWatcher.Created, AddressOf logchange
+            'AddHandler myfswFileWatcher.Deleted, AddressOf logchange
 
             ' add the rename handler as the signature is different
             AddHandler myfswFileWatcher.Renamed, AddressOf logrename
@@ -273,11 +277,11 @@ Public Class Form1
                 writelogxml(subfolder, sfile)
                 UpdateUI(GanttChart1)
             End If
-            If e.ChangeType = IO.WatcherChangeTypes.Created Then
+            If e.ChangeType = IO.WatcherChangeTypes.Created And False Then
                 writelogxml(subfolder, sfile)
                 UpdateUI(GanttChart1)
             End If
-            If e.ChangeType = IO.WatcherChangeTypes.Deleted Then
+            If e.ChangeType = IO.WatcherChangeTypes.Deleted And False Then
                 'MsgBox("delete")
                 writelogxml(subfolder, sfile)
                 UpdateUI(GanttChart1)
@@ -319,7 +323,7 @@ Public Class Form1
                         xNodeList2 = xNodeTemp.SelectNodes("log[@time!='']")
                         If CType(xNodeTemp, XmlElement).GetAttribute("create") = "" Then
                             lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"),
-                                                       Date.Now.ToString("yyyy.MM.dd"), Date.Now.ToString("yyyy.MM.dd"),
+                                                       Date.Now.ToString("yyyy.MM.dd HH"), Date.Now.ToString("yyyy.MM.dd HH"),
                                                        Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
                         Else
                             lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"),
@@ -357,6 +361,9 @@ Public Class Form1
     End Sub
 
     Private Sub writelogxml(folder As String, sfile As String)
+        '設計規格:
+        '當資料夾結構變動時，紀錄子目錄的變動時間，精度=小時
+        '
         If File.Exists(rootDIR & "\XML_log.xml") Then
             Dim xdoc As XmlDocument = New XmlDocument
             Dim xRoot As XmlNode
@@ -367,32 +374,37 @@ Public Class Form1
                 '讀取 XML
                 xdoc.Load(rootDIR & "\XML_log.xml")
                 xRoot = CType(xdoc.DocumentElement, XmlNode)
-                '選擇 section
+                '選擇節點folder[@name=子目錄名稱]
                 xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & folder & "']")
                 If xNodeTemp Is Nothing Then
-                    'root[@name]節點
-                    'xNodeTemp = xRoot.SelectSingleNode("root[@name='H123']")
-                    'xNodeTemp = xRoot.
+                    '如果找不到節點,則建立節點folder[@name=子目錄名稱]
                     xChildElement = xdoc.CreateElement("folder")
                     xChildElement.SetAttribute("name", folder)
                     xChildElement.SetAttribute("create", Date.Now.ToString("yyyy.MM.dd"))
                     xRoot.AppendChild(xChildElement)
                     If sfile <> "" Then
-                        'log[@time]節點
+                        '建立節點log[@time]
                         xElement2 = xdoc.CreateElement("log")
-                        xElement2.SetAttribute("time", Date.Now.ToString("yyyy.MM.dd"))
+                        xElement2.SetAttribute("time", Date.Now.ToString("yyyy.MM.dd HH:mm:ss"))
                         xChildElement.AppendChild(xElement2)
-
                     Else
-
                     End If
                     xdoc.Save(rootDIR & "\XML_log.xml")
                 Else
-                    xNodeTemp2 = xNodeTemp.SelectNodes("log[@time='" & Date.Now.ToString("yyyy.MM.dd") & "']")
-                    If xNodeTemp2.Count > 0 Then
+                    xNodeTemp2 = xNodeTemp.SelectNodes("log[@time!='']")
+                    If xNodeTemp2.Count > 1 Then
+                        Dim tdate As Date = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
+                        If tdate.ToString("yyyy.MM.dd HH") = Date.Now.ToString("yyyy.MM.dd HH") Then
+                            xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
+                        End If
+                        xElement2 = xdoc.CreateElement("log")
+                        xElement2.SetAttribute("time", Date.Now.ToString("yyyy.MM.dd HH:mm:ss"))
+                        xNodeTemp.AppendChild(xElement2)
+                        xdoc.Save(rootDIR & "\XML_log.xml")
+
                     Else
                         xElement2 = xdoc.CreateElement("log")
-                        xElement2.SetAttribute("time", Date.Now.ToString("yyyy.MM.dd"))
+                        xElement2.SetAttribute("time", Date.Now.ToString("yyyy.MM.dd HH:mm:ss"))
                         xNodeTemp.AppendChild(xElement2)
                         xdoc.Save(rootDIR & "\XML_log.xml")
                     End If
