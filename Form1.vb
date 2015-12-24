@@ -8,7 +8,7 @@ Imports System.ComponentModel
 Public Class Form1
     Private WithEvents myfswFileWatcher As AdvancedFileSystemWatcher
 
-    Public rootDIR As String = ""
+    Public rootDIR As String = "P:\TMPE\DATA\83_滿液式冰水機\(TAI)RCU\1.滿液式冰水機\H137\H137V12(人機更形)"
     'Public rootDIR As String = "D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
     'Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
@@ -64,8 +64,6 @@ Public Class Form1
                             xChildElement.SetAttribute("name", dirarr(dirarr.Length - 1))
                             xChildElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                             xRoot.AppendChild(xChildElement)
-                            '等個0.5秒
-                            Threading.Thread.Sleep(500)
                             '嘗試選擇子目錄 (再次)
                             xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & dirarr(dirarr.Length - 1) & "']")
                             '嘗試選擇子目錄裡的時間紀錄節點 (再次)
@@ -103,15 +101,13 @@ Public Class Form1
                     Dim dirarr As String()
                     dirarr = rootDIR.Split("\")
                     Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
-                    'xdoc = New XmlDocument
-                    Dim xdoc1 As XmlDocument = New XmlDocument
-                    xdoc1.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
+                    xdoc = New XmlDocument
+                    xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
                     xElement = xdoc.CreateElement("root")
                     xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
                     xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
-                    xdoc1.AppendChild(xElement)
-                    xdoc1.Save(rootDIR & "\XML_log.xml")
-                    Threading.Thread.Sleep(1000)
+                    xdoc.AppendChild(xElement)
+                    xdoc.Save(rootDIR & "\XML_log.xml")
                     retry = True
                 End Try
             End While
