@@ -8,8 +8,8 @@ Imports System.ComponentModel
 Public Class Form1
     Private WithEvents myfswFileWatcher As AdvancedFileSystemWatcher
 
-    Public rootDIR As String = "P:\TMPE\DATA\83_滿液式冰水機\(TAI)RCU\1.滿液式冰水機\H137\H137V12(人機更形)"
-    'Public rootDIR As String = "D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
+    'Public rootDIR As String = "P:\TMPE\DATA\83_滿液式冰水機\(TAI)RCU\1.滿液式冰水機\H137\H137V12(人機更形)"
+    Public rootDIR As String = "D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
     'Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
@@ -171,7 +171,7 @@ Public Class Form1
 
             ' add the handler to each event
             AddHandler myfswFileWatcher.Changed, AddressOf logchange
-            'AddHandler myfswFileWatcher.Created, AddressOf logchange
+            AddHandler myfswFileWatcher.Created, AddressOf logchange
             'AddHandler myfswFileWatcher.Deleted, AddressOf logchange
 
             ' add the rename handler as the signature is different
@@ -270,23 +270,27 @@ Public Class Form1
             subfolder = temparr(0)
             sfile = temparr(1)
         Else
+            Dim temp As String = rootDIR & "\" & e.Name
+            If (File.GetAttributes(temp) And FileAttributes.Directory) <> FileAttributes.Directory Then
+                Exit Sub
+            End If
             subfolder = e.Name
             sfile = ""
         End If
 
         If e.Name.Contains("XML_log") Then
-            'MsgBox(sfile.Contains("XML_log"))
+            Exit Sub
         Else
             If e.ChangeType = IO.WatcherChangeTypes.Changed Then
                 'MsgBox("change")
                 writelogxml(subfolder, sfile)
                 UpdateUI(GanttChart1)
             End If
-            If e.ChangeType = IO.WatcherChangeTypes.Created And False Then
+            If e.ChangeType = IO.WatcherChangeTypes.Created Then
                 writelogxml(subfolder, sfile)
                 UpdateUI(GanttChart1)
             End If
-            If e.ChangeType = IO.WatcherChangeTypes.Deleted And False Then
+            If e.ChangeType = IO.WatcherChangeTypes.Deleted Then
                 'MsgBox("delete")
                 writelogxml(subfolder, sfile)
                 UpdateUI(GanttChart1)
@@ -386,7 +390,7 @@ Public Class Form1
                     '如果找不到節點,則建立節點folder[@name=子目錄名稱]
                     xChildElement = xdoc.CreateElement("folder")
                     xChildElement.SetAttribute("name", folder)
-                    xChildElement.SetAttribute("create", Date.Now.ToString("yyyy.MM.dd HH:mm:ss"))
+                    xChildElement.SetAttribute("create", Date.Now.ToString("yyyy.MM.dd"))
                     xRoot.AppendChild(xChildElement)
                     If sfile <> "" Then
                         '建立節點log[@time]
