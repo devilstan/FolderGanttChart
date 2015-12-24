@@ -9,8 +9,9 @@ Public Class Form1
     Private WithEvents myfswFileWatcher As AdvancedFileSystemWatcher
 
     'Public rootDIR As String = "P:\TMPE\DATA\83_滿液式冰水機\(TAI)RCU\1.滿液式冰水機\H137\H137V12(人機更形)"
-    Public rootDIR As String = "D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
-    'Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
+    'Public rootDIR As String = "D:\workspace\myRepo\H188V040t"
+    'Public rootDIR As String ="C:\Users\devilstan\Documents\測試基地\H188V030"
+    Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         If My.Application.CommandLineArgs.Count > 0 Then
@@ -165,14 +166,14 @@ Public Class Form1
             'make sure you use OR for each Filter as we need to
             'all of those 
             myfswFileWatcher.NotifyFilter = (NotifyFilters.LastAccess Or
-                                                NotifyFilters.LastWrite Or
-                                                NotifyFilters.FileName Or
-                                                NotifyFilters.DirectoryName)
+                                                NotifyFilters.LastWrite) ' Or
+            'NotifyFilters.FileName Or
+            'NotifyFilters.DirectoryName)
 
             ' add the handler to each event
             AddHandler myfswFileWatcher.Changed, AddressOf logchange
             AddHandler myfswFileWatcher.Created, AddressOf logchange
-            'AddHandler myfswFileWatcher.Deleted, AddressOf logchange
+            AddHandler myfswFileWatcher.Deleted, AddressOf logchange
 
             ' add the rename handler as the signature is different
             AddHandler myfswFileWatcher.Renamed, AddressOf logrename
@@ -265,15 +266,28 @@ Public Class Form1
         Dim temparr As String()
         Dim subfolder As String
         Dim sfile As String
+
+        If System.IO.Path.GetExtension(rootDIR & "\" & e.Name).ToUpper = ".TMP" Or
+            e.Name.ToUpper.Contains("~$") Or
+            e.Name.ToUpper.Contains("XML_LOG") Then
+            Exit Sub
+        End If
+
+        UpdateDebug(e)
         If e.Name.Contains("\") Then
             temparr = e.Name.Split("\")
             subfolder = temparr(0)
             sfile = temparr(1)
         Else
             Dim temp As String = rootDIR & "\" & e.Name
-            If (File.GetAttributes(temp) And FileAttributes.Directory) <> FileAttributes.Directory Then
-                Exit Sub
-            End If
+            Try
+                If (File.GetAttributes(temp) And FileAttributes.Directory) <> FileAttributes.Directory Then
+                    Exit Sub
+                End If
+            Catch ex As Exception
+                MsgBox(ex.Message)
+            End Try
+
             subfolder = e.Name
             sfile = ""
         End If
@@ -302,6 +316,20 @@ Public Class Form1
         'MsgBox("rename")
         'txt_folderactivity.Text &= "File" & e.OldName &
         '              " has been renamed to " & e.Name & vbCrLf
+    End Sub
+
+    Private Delegate Sub UpdateDebugCallBack(ByVal e As System.IO.FileSystemEventArgs)
+
+    Private Sub UpdateDebug(ByVal e As System.IO.FileSystemEventArgs)
+        If Me.InvokeRequired() Then
+            Dim cb As New UpdateDebugCallBack(AddressOf UpdateDebug)
+            Me.Invoke(cb, e)
+        Else
+            ' Show that a file has been created, changed, or deleted.
+            Dim wct As WatcherChangeTypes = e.ChangeType
+            Dim o As String = ("File " & e.FullPath & " " & wct.ToString())
+            TextBox_debug.AppendText(o & vbCrLf)
+        End If
     End Sub
 
     Private Delegate Sub UpdateUICallBack(ByVal GanttChart1 As Control)
@@ -461,7 +489,17 @@ Public Class Form1
     Private Sub Form1_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
         'Me.WindowState = FormWindowState.Minimized
         'Me.Visible = False
-        'Me.NotifyIcon1.Visible = True
+        Me.NotifyIcon1.Visible = False
         'e.Cancel = True
+    End Sub
+
+    Private Sub TextBox_debug_TextChanged(sender As Object, e As EventArgs) Handles TextBox_debug.TextChanged
+        Timer1.Stop()
+        Timer1.Start()
+    End Sub
+
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        TextBox_debug.AppendText("###############" & vbCrLf)
+        Timer1.Stop()
     End Sub
 End Class
