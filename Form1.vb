@@ -62,7 +62,7 @@ Public Class Form1
                             Dim theday As Date = "#" & Directory.GetCreationTime(Dir) & "#"
                             xChildElement = xdoc.CreateElement("folder")
                             xChildElement.SetAttribute("name", dirarr(dirarr.Length - 1))
-                            xChildElement.SetAttribute("create", theday.ToString("yyyy.MM.dd HH"))
+                            xChildElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                             xRoot.AppendChild(xChildElement)
                             '等個0.5秒
                             Threading.Thread.Sleep(500)
@@ -73,7 +73,7 @@ Public Class Form1
                         Finally
                             'bar條繪製處理
                             '繪製子目錄起點
-                            Dim theday As Date = "#" & (CType(xNodeTemp, XmlElement).GetAttribute("create")) & "#"
+                            Dim theday As Date = "#" & CType(xNodeTemp, XmlElement).GetAttribute("create") & "#"
                             lst.Add(New BarInformation(dirarr(dirarr.Length - 1),
                                                            theday.ToString("yyyy.MM.dd"),
                                                            theday.AddMinutes(5.0F),
@@ -103,13 +103,15 @@ Public Class Form1
                     Dim dirarr As String()
                     dirarr = rootDIR.Split("\")
                     Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
-                    xdoc = New XmlDocument
-                    xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
+                    'xdoc = New XmlDocument
+                    Dim xdoc1 As XmlDocument = New XmlDocument
+                    xdoc1.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
                     xElement = xdoc.CreateElement("root")
                     xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
                     xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
-                    xdoc.AppendChild(xElement)
-                    xdoc.Save(rootDIR & "\XML_log.xml")
+                    xdoc1.AppendChild(xElement)
+                    xdoc1.Save(rootDIR & "\XML_log.xml")
+                    Threading.Thread.Sleep(1000)
                     retry = True
                 End Try
             End While
@@ -388,7 +390,7 @@ Public Class Form1
                     '如果找不到節點,則建立節點folder[@name=子目錄名稱]
                     xChildElement = xdoc.CreateElement("folder")
                     xChildElement.SetAttribute("name", folder)
-                    xChildElement.SetAttribute("create", Date.Now.ToString("yyyy.MM.dd"))
+                    xChildElement.SetAttribute("create", Date.Now.ToString("yyyy.MM.dd HH:mm:ss"))
                     xRoot.AppendChild(xChildElement)
                     If sfile <> "" Then
                         '建立節點log[@time]
