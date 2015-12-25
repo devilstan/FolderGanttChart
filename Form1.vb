@@ -166,9 +166,9 @@ Public Class Form1
             'make sure you use OR for each Filter as we need to
             'all of those 
             myfswFileWatcher.NotifyFilter = (NotifyFilters.LastAccess Or
-                                                NotifyFilters.LastWrite) ' Or
-            'NotifyFilters.FileName Or
-            'NotifyFilters.DirectoryName)
+                                                NotifyFilters.LastWrite Or
+                                                NotifyFilters.FileName Or
+                                                NotifyFilters.DirectoryName)
 
             ' add the handler to each event
             AddHandler myfswFileWatcher.Changed, AddressOf logchange
@@ -285,7 +285,12 @@ Public Class Form1
                     Exit Sub
                 End If
             Catch ex As Exception
-                MsgBox(ex.Message)
+                'MsgBox(ex.Message)
+                NotifyIcon1.Icon = SystemIcons.Information
+                NotifyIcon1.BalloonTipTitle = "提示"
+                NotifyIcon1.BalloonTipText = ex.Message
+                NotifyIcon1.Visible = True
+                NotifyIcon1.ShowBalloonTip(1000)
             End Try
 
             subfolder = e.Name
@@ -295,6 +300,11 @@ Public Class Form1
         If e.Name.Contains("XML_log") Then
             Exit Sub
         Else
+            NotifyIcon1.Icon = SystemIcons.Information
+            NotifyIcon1.BalloonTipTitle = "提示"
+            NotifyIcon1.BalloonTipText = e.Name
+            NotifyIcon1.Visible = True
+            NotifyIcon1.ShowBalloonTip(1000)
             If e.ChangeType = IO.WatcherChangeTypes.Changed Then
                 'MsgBox("change")
                 writelogxml(subfolder, sfile)
@@ -328,7 +338,8 @@ Public Class Form1
             ' Show that a file has been created, changed, or deleted.
             Dim wct As WatcherChangeTypes = e.ChangeType
             Dim o As String = ("File " & e.FullPath & " " & wct.ToString())
-            TextBox_debug.AppendText(o & vbCrLf)
+            'TextBox_debug.AppendText(o & vbCrLf)
+            TextBox_debug.AppendText(e.Name & ", " & wct.ToString() & vbCrLf)
         End If
     End Sub
 
