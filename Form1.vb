@@ -4,16 +4,27 @@ Imports System.Diagnostics
 Imports System.Collections
 Imports System.Xml
 Imports System.ComponentModel
+Imports System.Threading
+Imports System.Security.Permissions
+Imports System.Security.Principal
 
 Public Class Form1
     Private WithEvents myfswFileWatcher As AdvancedFileSystemWatcher
 
-    'Public rootDIR As String = "P:\TMPE\DATA\83_滿液式冰水機\(TAI)RCU\1.滿液式冰水機\H137\H137V12(人機更形)"
-    'Public rootDIR As String = "D:\workspace\myRepo\H188V040t"
-    'Public rootDIR As String ="C:\Users\devilstan\Documents\測試基地\H188V030"
-    Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
+    'Public rootDIR As String = "\\tyd095-pc\開發中\[Q]\H188V040"
+    Public rootDIR As String = "C:\Users\devilstan\Documents"
+    'Public rootDIR As String = "D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
+    'Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
+
+    Dim folder_changed_now As String
+    Dim filesinfo As Date()
+    Dim update_delay As Integer
+    Dim textbox_debug_clr As Boolean
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        update_delay = Timer1.Interval
+        Timer1.Enabled = True
+        Timer1.Stop()
         If My.Application.CommandLineArgs.Count > 0 Then
             Me.Text = My.Application.CommandLineArgs(0)
             rootDIR = Me.Text
@@ -26,6 +37,10 @@ Public Class Form1
         End If
 
         Randomize()
+
+        Dim dirarr As String()
+        dirarr = rootDIR.Split("\")
+        NotifyIcon1.Text = dirarr(dirarr.Length - 1)
 
         With GanttChart1
             .RowFont = New Font("微軟正黑體", 8.0, FontStyle.Regular, GraphicsUnit.Point)
@@ -50,7 +65,7 @@ Public Class Form1
                     Dim rowindex As Integer = 0
                     '掃瞄子目錄
                     For Each Dir As String In Directory.GetDirectories(rootDIR)
-                        Dim dirarr As String()
+                        'Dim dirarr As String()
                         dirarr = Dir.Split("\")
                         Try
                             '嘗試選擇子目錄
@@ -99,7 +114,7 @@ Public Class Form1
                     retry = False
                 Catch ex As Exception
                     MessageBox.Show("初次監控執行，將在主目錄下建立記錄檔 XML_log.xml")
-                    Dim dirarr As String()
+                    'Dim dirarr As String()
                     dirarr = rootDIR.Split("\")
                     Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
                     xdoc = New XmlDocument
@@ -173,13 +188,14 @@ Public Class Form1
             ' add the handler to each event
             AddHandler myfswFileWatcher.Changed, AddressOf logchange
             AddHandler myfswFileWatcher.Created, AddressOf logchange
-            AddHandler myfswFileWatcher.Deleted, AddressOf logchange
+            'AddHandler myfswFileWatcher.Deleted, AddressOf logchange
 
             ' add the rename handler as the signature is different
             AddHandler myfswFileWatcher.Renamed, AddressOf logrename
 
             'Start the filewatcher watching for files.
             myfswFileWatcher.EnableRaisingEvents = True
+            System.Threading.Thread.Sleep(1000)
             myfswFileWatcher.IncludeSubdirectories = True
         Else
             'this is the path we want to monitor
@@ -263,63 +279,36 @@ Public Class Form1
     End Sub
 
     Private Sub logchange(ByVal source As Object, ByVal e As System.IO.FileSystemEventArgs)
-        Dim temparr As String()
-        Dim subfolder As String
-        Dim sfile As String
-
-        If System.IO.Path.GetExtension(rootDIR & "\" & e.Name).ToUpper = ".TMP" Or
-            e.Name.ToUpper.Contains("~$") Or
-            e.Name.ToUpper.Contains("XML_LOG") Then
+        If e.Name.ToUpper.Contains("XML_LOG") Or
+           e.Name.ToUpper.Contains("~$") Or
+           Path.GetExtension(e.FullPath).ToUpper.Contains("TMP") Then
             Exit Sub
         End If
-
         UpdateDebug(e)
+
+        '資料夾或檔案(變動一個檔案可能引起多個連續事件)
+
+
         If e.Name.Contains("\") Then
-            temparr = e.Name.Split("\")
-            subfolder = temparr(0)
-            sfile = temparr(1)
+            Me.folder_changed_now = e.Name.Split("\")(0)
         Else
-            Dim temp As String = rootDIR & "\" & e.Name
-            Try
-                If (File.GetAttributes(temp) And FileAttributes.Directory) <> FileAttributes.Directory Then
-                    Exit Sub
-                End If
-            Catch ex As Exception
-                'MsgBox(ex.Message)
-                NotifyIcon1.Icon = SystemIcons.Information
-                NotifyIcon1.BalloonTipTitle = "提示"
-                NotifyIcon1.BalloonTipText = ex.Message
-                NotifyIcon1.Visible = True
-                NotifyIcon1.ShowBalloonTip(1000)
-            End Try
-
-            subfolder = e.Name
-            sfile = ""
-        End If
-
-        If e.Name.Contains("XML_log") Then
+            Me.folder_changed_now = ""
             Exit Sub
-        Else
-            NotifyIcon1.Icon = SystemIcons.Information
-            NotifyIcon1.BalloonTipTitle = "提示"
-            NotifyIcon1.BalloonTipText = e.Name
-            NotifyIcon1.Visible = True
-            NotifyIcon1.ShowBalloonTip(1000)
-            If e.ChangeType = IO.WatcherChangeTypes.Changed Then
-                'MsgBox("change")
-                writelogxml(subfolder, sfile)
-                UpdateUI(GanttChart1)
-            End If
-            If e.ChangeType = IO.WatcherChangeTypes.Created Then
-                writelogxml(subfolder, sfile)
-                UpdateUI(GanttChart1)
-            End If
-            If e.ChangeType = IO.WatcherChangeTypes.Deleted Then
-                'MsgBox("delete")
-                writelogxml(subfolder, sfile)
-                UpdateUI(GanttChart1)
-            End If
         End If
+
+        If e.ChangeType = IO.WatcherChangeTypes.Changed Then
+            'writelogxml(e.Name, filesinfo)
+            'UpdateUI(GanttChart1)
+        End If
+        If e.ChangeType = IO.WatcherChangeTypes.Created Then
+            'writelogxml(e.Name, filesinfo)
+            'UpdateUI(GanttChart1)
+        End If
+        If e.ChangeType = IO.WatcherChangeTypes.Deleted Then
+            'writelogxml(e.Name, filesinfo)
+            'UpdateUI(GanttChart1)
+        End If
+
     End Sub
 
     Public Sub logrename(ByVal source As Object, ByVal e As System.IO.RenamedEventArgs)
@@ -335,12 +324,16 @@ Public Class Form1
             Dim cb As New UpdateDebugCallBack(AddressOf UpdateDebug)
             Me.Invoke(cb, e)
         Else
-            ' Show that a file has been created, changed, or deleted.
             Dim wct As WatcherChangeTypes = e.ChangeType
-            Dim o As String = ("File " & e.FullPath & " " & wct.ToString())
-            'TextBox_debug.AppendText(o & vbCrLf)
-            TextBox_debug.AppendText(e.Name & ", " & wct.ToString() & vbCrLf)
-        End If
+            If textbox_debug_clr = True Then
+                TextBox_debug.Text = ""
+                textbox_debug_clr = False
+            End If
+
+            TextBox_debug.AppendText(wct.ToString() & ", " & e.Name & vbCrLf)
+            Timer1.Stop()
+            Timer1.Start()
+            End If
     End Sub
 
     Private Delegate Sub UpdateUICallBack(ByVal GanttChart1 As Control)
@@ -350,69 +343,80 @@ Public Class Form1
             Dim cb As New UpdateUICallBack(AddressOf UpdateUI)
             Me.Invoke(cb, c)
         Else
-
             With GanttChart1
-                .RemoveBars()
-                Dim lst As New List(Of BarInformation)
-                Dim xdoc As XmlDocument = New XmlDocument
-                Dim xRoot As XmlNode
-                Dim xNodeList As XmlNodeList = Nothing
-                Dim xNodeList2 As XmlNodeList = Nothing
-                Dim xNodeTemp As XmlNode
-                Dim theday As Date
-                Try
-                    '讀取 XML
-                    xdoc.Load(rootDIR & "\XML_log.xml")
-                    xRoot = CType(xdoc.DocumentElement, XmlNode)
-                    '選擇子目錄節點
-                    xNodeList = xRoot.SelectNodes("folder[@name!='']")
-                    For intI As Integer = 0 To xNodeList.Count - 1
-                        xNodeTemp = xNodeList.Item(intI)
-                        xNodeList2 = xNodeTemp.SelectNodes("log[@time!='']")
-                        If CType(xNodeTemp, XmlElement).GetAttribute("create") = "" Then
-                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"),
+                    .RemoveBars()
+                    Dim lst As New List(Of BarInformation)
+                    Dim xdoc As XmlDocument = New XmlDocument
+                    Dim xRoot As XmlNode
+                    Dim xNodeList As XmlNodeList = Nothing
+                    Dim xNodeList2 As XmlNodeList = Nothing
+                    Dim xNodeTemp As XmlNode
+                    Dim theday As Date
+                    Try
+                        '讀取 XML
+                        xdoc.Load(rootDIR & "\XML_log.xml")
+                        xRoot = CType(xdoc.DocumentElement, XmlNode)
+                        '選擇子目錄節點
+                        xNodeList = xRoot.SelectNodes("folder[@name!='']")
+                        For intI As Integer = 0 To xNodeList.Count - 1
+                            xNodeTemp = xNodeList.Item(intI)
+                            xNodeList2 = xNodeTemp.SelectNodes("log[@time!='']")
+                            If CType(xNodeTemp, XmlElement).GetAttribute("create") = "" Then
+                                lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"),
                                                        Date.Now.ToString("yyyy.MM.dd HH"), Date.Now.ToString("yyyy.MM.dd HH"),
                                                        Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
-                        Else
-                            theday = "#" & CType(xNodeTemp, XmlElement).GetAttribute("create") & "#"
-                            lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"),
+                            Else
+                                theday = "#" & CType(xNodeTemp, XmlElement).GetAttribute("create") & "#"
+                                lst.Add(New BarInformation(CType(xNodeList.Item(intI), XmlElement).GetAttribute("name"),
                                                        CType(xNodeTemp, XmlElement).GetAttribute("create"),
                                                        theday.AddMinutes(5.0F),
                                                        Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
-                        End If
+                            End If
 
-                        Select Case xNodeList2.Count
-                            Case 0
-                                'lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeTemp, XmlElement).GetAttribute("create"), CType(xNodeTemp, XmlElement).GetAttribute("create"), Color.Aqua, Color.Khaki, intI))
-                            Case 1
-                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"),
+                            Select Case xNodeList2.Count
+                                Case 0
+                                    'lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"), CType(xNodeTemp, XmlElement).GetAttribute("create"), CType(xNodeTemp, XmlElement).GetAttribute("create"), Color.Aqua, Color.Khaki, intI))
+                                Case 1
+                                    lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"),
                                                            CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"),
                                                            CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"),
                                                            Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
-                            Case Else
-                                lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"),
+                                Case Else
+                                    lst.Add(New BarInformation(CType(xNodeList(intI), XmlElement).GetAttribute("name"),
                                                            CType(xNodeList2.Item(0), XmlElement).GetAttribute("time"),
                                                            CType(xNodeList2.Item(xNodeList2.Count - 1), XmlElement).GetAttribute("time"),
                                                            Color.FromArgb(239, 71, 111), Color.FromArgb(239, 71, 111), intI))
-                        End Select
+                            End Select
+                        Next
+
+                    Catch ex As Exception
+                        MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
+                    End Try
+
+                    For Each bar As BarInformation In lst
+                        .AddChartBar(bar.RowText, bar, bar.FromTime, bar.ToTime, bar.Color, bar.HoverColor, bar.Index)
                     Next
-
-                Catch ex As Exception
-                    MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
-                End Try
-
-                For Each bar As BarInformation In lst
-                    .AddChartBar(bar.RowText, bar, bar.FromTime, bar.ToTime, bar.Color, bar.HoverColor, bar.Index)
-                Next
-                .Refresh()
-            End With
-        End If
+                    .Refresh()
+                End With
+            End If
     End Sub
 
-    Private Sub writelogxml(folder As String, sfile As String)
+    'Private Sub writelogxml(folder As String, filesinfo As date())
+    Private Sub writelogxml(folder As String, filesinfoo As IO.FileInfo())
         '設計規格:
         '當資料夾結構變動時，紀錄子目錄的變動時間，精度=小時
-        '
+        '忽略檔案
+        If filesinfoo(0).Name.ToUpper.Contains("XML_LOG") Or
+           filesinfoo(0).Name.ToUpper.Contains("~$") Or
+           filesinfoo(0).Name.ToUpper.Contains("~") Or
+           Path.GetExtension(filesinfoo(0).FullName).ToUpper.Contains("TMP") Then
+            Exit Sub
+        End If
+
+        'If FileInUse(rootDIR & "\XML_log.xml") Then
+        'Exit Sub
+        'End If
+
         If File.Exists(rootDIR & "\XML_log.xml") Then
             Dim xdoc As XmlDocument = New XmlDocument
             Dim xRoot As XmlNode
@@ -431,31 +435,38 @@ Public Class Form1
                     xChildElement.SetAttribute("name", folder)
                     xChildElement.SetAttribute("create", Date.Now.ToString("yyyy.MM.dd"))
                     xRoot.AppendChild(xChildElement)
-                    If sfile <> "" Then
+                    If filesinfoo.Length > 0 Then
                         '建立節點log[@time]
                         xElement2 = xdoc.CreateElement("log")
-                        xElement2.SetAttribute("time", Date.Now.ToString("yyyy.MM.dd HH:mm:ss"))
+                        xElement2.SetAttribute("time", filesinfoo(0).LastAccessTime.ToString("yyyy.MM.dd HH:mm:ss"))
                         xChildElement.AppendChild(xElement2)
                     End If
                 Else
+                    Dim date_tmp As Date
                     xNodeTemp2 = xNodeTemp.SelectNodes("log[@time!='']")
-                    If xNodeTemp2.Count > 1 Then
-                        Dim tdate As Date = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
-                        If tdate.ToString("yyyy.MM.dd HH") = Date.Now.ToString("yyyy.MM.dd HH") Then
-                            xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
-                        End If
-                        xElement2 = xdoc.CreateElement("log")
-                        xElement2.SetAttribute("time", Date.Now.ToString("yyyy.MM.dd HH:mm:ss"))
-                        xNodeTemp.AppendChild(xElement2)
-
-                    Else
-                        '子目錄沒有時間節點，或只有一個時間節點
-                        xElement2 = xdoc.CreateElement("log")
-                        xElement2.SetAttribute("time", Date.Now.ToString("yyyy.MM.dd HH:mm:ss"))
-                        xNodeTemp.AppendChild(xElement2)
-                    End If
+                    Select Case xNodeTemp2.Count
+                        Case 0  '沒有紀錄，新增子目錄內的檔案列表中最近的存取時間
+                            xElement2 = xdoc.CreateElement("log")
+                            xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                            xNodeTemp.AppendChild(xElement2)
+                        Case 1  '存在一個紀錄，假如子目錄內的檔案列表中最近的存取時間>原本記錄，則新增子目錄內的檔案列表中最近的存取時間
+                            date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
+                            If Date.Compare(filesinfo(0), date_tmp) > 0 Then
+                                xElement2 = xdoc.CreateElement("log")
+                                xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                                xNodeTemp.AppendChild(xElement2)
+                            End If
+                        Case Else '存在多個紀錄，假如子目錄內的檔案列表中最近的存取時間與最後記錄的時差=0，複寫最後一個紀錄，否則新增一個紀錄
+                            date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
+                            If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo(0).ToString("yyyy.MM.dd HH") Then
+                                xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
+                            End If
+                            xElement2 = xdoc.CreateElement("log")
+                            xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                            xNodeTemp.AppendChild(xElement2)
+                    End Select
                 End If
-                xdoc.Save(rootDIR & "\XML_log.xml")
+                If FileInUse(rootDIR & "\XML_log.xml") = False Then xdoc.Save(rootDIR & "\XML_log.xml")
             Catch ex As Exception
                 MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
             End Try
@@ -475,7 +486,7 @@ Public Class Form1
                 xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
                 xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                 xdoc.AppendChild(xElement)
-                xdoc.Save(rootDIR & "\XML_log.xml")
+                If FileInUse(rootDIR & "\XML_log.xml") = False Then xdoc.Save(rootDIR & "\XML_log.xml")
             Catch ex As Exception
                 MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
             End Try
@@ -504,13 +515,87 @@ Public Class Form1
         'e.Cancel = True
     End Sub
 
-    Private Sub TextBox_debug_TextChanged(sender As Object, e As EventArgs) Handles TextBox_debug.TextChanged
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        If Me.filesinfo Is Nothing And False Then
+            Timer1.Stop()
+            Timer1.Interval = update_delay
+            textbox_debug_clr = True
+            Exit Sub
+        End If
+        Dim myNOW As Date = Date.Now
+        '讀取子目錄中所有檔案
+        Dim di As New IO.DirectoryInfo(rootDIR & "\" & Me.folder_changed_now)
+        Dim filesinfoo As IO.FileInfo()
+        Dim myListo As New List(Of IO.FileInfo)()
+        Dim recentList As String = ""
+        Dim files() As String
+        Dim myList As New List(Of Date)()
+        Try
+            'diar1 = di.GetFiles()
+            files = IO.Directory.GetFiles(rootDIR & "\" & Me.folder_changed_now, "*.*", System.IO.SearchOption.AllDirectories)
+            filesinfoo = di.GetFiles("*.*", System.IO.SearchOption.AllDirectories)
+        Catch ex As Exception
+            textbox_debug_clr = True
+            Exit Sub
+        End Try
+
+        'list the names of all files in the specified directory
+        For i As Integer = 0 To filesinfoo.Length - 1
+            myListo.Add(filesinfoo(i))
+        Next
+        Array.Sort(Of IO.FileInfo)(filesinfoo, Function(p1, p2) p2.LastAccessTime.CompareTo(p1.LastAccessTime))
+        For i As Integer = 0 To filesinfoo.Length - 1
+            If DateTime.Compare(filesinfoo(i).LastAccessTime.AddSeconds(10), myNOW) > 0 Or
+               DateTime.Compare(filesinfoo(i).LastWriteTime.AddSeconds(10), myNOW) > 0 Then
+                recentList = recentList & filesinfoo(i).Name & vbCrLf
+            End If
+        Next
+
+        For i As Integer = 0 To files.Length - 1
+            myList.Add("#" & File.GetLastAccessTime(files(i)) & "#")
+        Next
+        '子目錄中所有檔案的最後存取時間排序, 0:最新, N:最舊
+        Dim filesinfo As Date() = myList.ToArray()
+        Array.Sort(Of Date)(filesinfo, Function(d1, d2) d2.CompareTo(d1))
+
+        'Me.folder_changed_now = e.Name
+        Me.filesinfo = filesinfo
+
+        If folder_changed_now <> "" Then
+            If FileInUse(rootDIR & "\XML_log.xml") = False Then
+                writelogxml(folder_changed_now, filesinfoo)
+                UpdateUI(GanttChart1)
+            Else
+                Dim thedelay As Integer = 300
+                TextBox_debug.AppendText(thedelay & " 毫秒後重試一次" & vbCrLf)
+                Timer1.Interval = thedelay
+                Timer1.Start()
+            End If
+
+        Else
+
+        End If
+        'NotifyIcon1.Icon = SystemIcons.Information
+        NotifyIcon1.BalloonTipTitle = "『" & folder_changed_now & "』有點動靜 - pid:" & Process.GetCurrentProcess.Id
+        NotifyIcon1.BalloonTipText = recentList
+
+        NotifyIcon1.Visible = True
+        NotifyIcon1.ShowBalloonTip(2000)
+        TextBox_debug.AppendText("更新通知" & vbCrLf)
         Timer1.Stop()
-        Timer1.Start()
+        textbox_debug_clr = True
     End Sub
 
-    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
-        TextBox_debug.AppendText("###############" & vbCrLf)
-        Timer1.Stop()
-    End Sub
+    Private Function FileInUse(ByVal f As String) As Boolean
+        Try
+            Dim FS As IO.FileStream = IO.File.Open(f, IO.FileMode.Open, IO.FileAccess.Read, IO.FileShare.None)
+            FS.Close()
+            FS.Dispose()
+            FS = Nothing
+        Catch
+            TextBox_debug.AppendText("文件被其他程式鎖定" & vbCrLf)
+            Return True
+        End Try
+        TextBox_debug.AppendText("文件可存取" & vbCrLf)
+    End Function
 End Class
