@@ -20,8 +20,12 @@ Public Class Form1
     Dim filesinfo As Date()
     Dim update_delay As Integer
     Dim textbox_debug_clr As Boolean
+    Dim write_when_load_flg As Boolean
+    Private _rnd As New Random()
+
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        write_when_load_flg = False
         update_delay = Timer1.Interval
         Timer1.Enabled = True
         Timer1.Stop()
@@ -80,6 +84,7 @@ Public Class Form1
                             xChildElement.SetAttribute("name", dirarr(dirarr.Length - 1))
                             xChildElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
                             xRoot.AppendChild(xChildElement)
+                            write_when_load_flg = True
                             '嘗試選擇子目錄 (再次)
                             xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & dirarr(dirarr.Length - 1) & "']")
                             '嘗試選擇子目錄裡的時間紀錄節點 (再次)
@@ -110,7 +115,9 @@ Public Class Form1
                         End Try
                         rowindex = rowindex + 1
                     Next
-                    xdoc.Save(rootDIR & "\XML_log.xml")
+                    If write_when_load_flg = True Then
+                        xdoc.Save(rootDIR & "\XML_log.xml")
+                    End If
                     retry = False
                 Catch ex As Exception
                     MessageBox.Show("初次監控執行，將在主目錄下建立記錄檔 XML_log.xml")
@@ -292,7 +299,11 @@ Public Class Form1
         If e.Name.Contains("\") Then
             Me.folder_changed_now = e.Name.Split("\")(0)
         Else
-            Me.folder_changed_now = ""
+            If Directory.Exists(e.FullPath) Then
+                Me.folder_changed_now = e.Name
+            Else
+
+            End If
             Exit Sub
         End If
 
@@ -326,7 +337,7 @@ Public Class Form1
         Else
             Dim wct As WatcherChangeTypes = e.ChangeType
             If textbox_debug_clr = True Then
-                TextBox_debug.Text = ""
+                TextBox_debug.Text = "檢查延遲 = " & Timer1.Interval & "毫秒" & vbCrLf
                 textbox_debug_clr = False
             End If
 
@@ -418,6 +429,7 @@ Public Class Form1
         'End If
 
         If File.Exists(rootDIR & "\XML_log.xml") Then
+            Dim file As System.IO.StreamWriter = Nothing
             Dim xdoc As XmlDocument = New XmlDocument
             Dim xRoot As XmlNode
             Dim xNodeTemp As XmlNode, xNodeTemp2 As XmlNodeList
@@ -425,6 +437,7 @@ Public Class Form1
             Dim xChildElement As XmlElement
             Try
                 '讀取 XML
+                'If FileInUse(rootDIR & "\XML_log.xml") = False Then file = My.Computer.FileSystem.OpenTextFileWriter(rootDIR & "\XML_log2.xml", True)
                 xdoc.Load(rootDIR & "\XML_log.xml")
                 xRoot = CType(xdoc.DocumentElement, XmlNode)
                 '選擇節點folder[@name=子目錄名稱]
@@ -458,15 +471,24 @@ Public Class Form1
                             End If
                         Case Else '存在多個紀錄，假如子目錄內的檔案列表中最近的存取時間與最後記錄的時差=0，複寫最後一個紀錄，否則新增一個紀錄
                             date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
-                            If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo(0).ToString("yyyy.MM.dd HH") Then
-                                xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
+                            If Date.Compare(filesinfo(0), date_tmp) > 0 Then
+                                If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo(0).ToString("yyyy.MM.dd HH") Then
+                                    xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
+                                End If
+                                xElement2 = xdoc.CreateElement("log")
+                                xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                                xNodeTemp.AppendChild(xElement2)
                             End If
-                            xElement2 = xdoc.CreateElement("log")
-                            xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
-                            xNodeTemp.AppendChild(xElement2)
                     End Select
                 End If
-                If FileInUse(rootDIR & "\XML_log.xml") = False Then xdoc.Save(rootDIR & "\XML_log.xml")
+                If FileInUse(rootDIR & "\XML_log.xml") = False Then
+                    'Dim fs As Stream
+                    'xdoc.Save(fs)
+
+                    'If Not file Is Nothing Then file.Close()
+                    xdoc.Save(rootDIR & "\XML_log.xml")
+
+                End If
             Catch ex As Exception
                 MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
             End Try
@@ -518,7 +540,7 @@ Public Class Form1
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         If Me.filesinfo Is Nothing And False Then
             Timer1.Stop()
-            Timer1.Interval = update_delay
+            Timer1.Interval = update_delay + 200 * _rnd.Next(0, 15) + 1
             textbox_debug_clr = True
             Exit Sub
         End If
@@ -577,13 +599,15 @@ Public Class Form1
         End If
         'NotifyIcon1.Icon = SystemIcons.Information
         NotifyIcon1.BalloonTipTitle = "『" & folder_changed_now & "』有點動靜 - pid:" & Process.GetCurrentProcess.Id
-        NotifyIcon1.BalloonTipText = recentList
+        NotifyIcon1.BalloonTipText = IIf(recentList = "", "不列出刪除檔案", recentList)
 
         NotifyIcon1.Visible = True
         NotifyIcon1.ShowBalloonTip(2000)
         TextBox_debug.AppendText("更新通知" & vbCrLf)
+        Timer1.Interval = update_delay + 200 * CInt(Math.Ceiling(Rnd() * 15)) + 1
         Timer1.Stop()
         textbox_debug_clr = True
+        Me.folder_changed_now = ""
     End Sub
 
     Private Function FileInUse(ByVal f As String) As Boolean
