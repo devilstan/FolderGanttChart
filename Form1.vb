@@ -19,12 +19,17 @@ Public Class Form1
     Dim recentList As String = ""
     Dim folder_changed_now As String
     Dim filesinfo As Date()
+    Dim filesinfo2 As LastAccessOrWriteList()
     Dim update_delay As Integer
     Dim textbox_debug_clr As Boolean
     Dim write_when_load_flg As Boolean
     Dim write_when_change_flg As Boolean
     Private _rnd As New Random()
 
+    Private Structure LastAccessOrWriteList
+        Public lastAccessOrWriteDate As Date
+        Public fileinfo As IO.FileInfo
+    End Structure
 
     Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         write_when_load_flg = False
@@ -364,6 +369,8 @@ Public Class Form1
         Dim myListo As New List(Of IO.FileInfo)()
         Dim files() As String
         Dim myList As New List(Of Date)()
+        Dim laowlst As New List(Of LastAccessOrWriteList)()
+        Dim laowarr As LastAccessOrWriteList()
         Try
             'diar1 = di.GetFiles()
             files = IO.Directory.GetFiles(rootDIR & "\" & Me.folder_changed_now, "*.*", System.IO.SearchOption.AllDirectories)
@@ -375,9 +382,19 @@ Public Class Form1
 
         'list the names of all files in the specified directory
         For i As Integer = 0 To filesinfoo.Length - 1
+            Dim f As New LastAccessOrWriteList
+            If Date.Compare(filesinfoo(i).LastWriteTime, filesinfoo(i).LastAccessTime) > 0 Then
+                f.lastAccessOrWriteDate = filesinfoo(i).LastWriteTime
+            Else
+                f.lastAccessOrWriteDate = filesinfoo(i).LastAccessTime
+            End If
+            f.fileinfo = filesinfoo(i)
+            laowlst.Add(f)
             myListo.Add(filesinfoo(i))
         Next
+        laowarr = laowlst.ToArray
         Array.Sort(Of IO.FileInfo)(filesinfoo, Function(p1, p2) p2.LastAccessTime.CompareTo(p1.LastAccessTime))
+        Array.Sort(Of LastAccessOrWriteList)(laowarr, Function(p1, p2) p2.lastAccessOrWriteDate.CompareTo(p1.lastAccessOrWriteDate))
 
         '編輯10秒內有變動的檔案列表
         For i As Integer = 0 To filesinfoo.Length - 1
@@ -387,7 +404,7 @@ Public Class Form1
             End If
         Next
 
-        '編輯子目錄中的檔案列表的存取時間
+        '編輯子目錄中的檔案列表的最新存取時間
         For i As Integer = 0 To files.Length - 1
             myList.Add("#" & File.GetLastWriteTime(files(i)) & "#")
         Next
@@ -397,6 +414,7 @@ Public Class Form1
         Array.Sort(Of Date)(filesinfo, Function(d1, d2) d2.CompareTo(d1))
 
         Me.filesinfo = filesinfo
+        Me.filesinfo2 = laowarr
 
         If folder_changed_now <> "" Then
             If FileInUse(rootDIR & "\XML_log.xml") = False Then
@@ -517,25 +535,25 @@ Public Class Form1
                     Select Case xNodeTemp2.Count
                         Case 0  '沒有紀錄，新增子目錄內的檔案列表中最近的存取時間
                             xElement2 = xdoc.CreateElement("log")
-                            xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                            xElement2.SetAttribute("time", filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH:mm:ss"))
                             xNodeTemp.AppendChild(xElement2)
                             write_when_change_flg = True
                         Case 1  '存在一個紀錄，假如子目錄內的檔案列表中最近的存取時間>原本記錄，則新增子目錄內的檔案列表中最近的存取時間
                             date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
-                            If Date.Compare(filesinfo(0), date_tmp) > 0 Then
+                            If Date.Compare(filesinfo2(0).lastAccessOrWriteDate, date_tmp) > 0 Then
                                 xElement2 = xdoc.CreateElement("log")
-                                xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                                xElement2.SetAttribute("time", filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH:mm:ss"))
                                 xNodeTemp.AppendChild(xElement2)
                                 write_when_change_flg = True
                             End If
                         Case Else '存在多個紀錄，假如子目錄內的檔案列表中最近的存取時間與最後記錄的時差=0，複寫最後一個紀錄，否則新增一個紀錄
                             date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
-                            If Date.Compare(filesinfo(0), date_tmp) > 0 Then
-                                If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo(0).ToString("yyyy.MM.dd HH") Then
+                            If Date.Compare(filesinfo2(0).lastAccessOrWriteDate, date_tmp) > 0 Then
+                                If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH") Then
                                     xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
                                 End If
                                 xElement2 = xdoc.CreateElement("log")
-                                xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                                xElement2.SetAttribute("time", filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH:mm:ss"))
                                 xNodeTemp.AppendChild(xElement2)
                                 write_when_change_flg = True
                             End If
