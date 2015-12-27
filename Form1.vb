@@ -16,11 +16,13 @@ Public Class Form1
     'Public rootDIR As String = "D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
     'Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
+    Dim recentList As String = ""
     Dim folder_changed_now As String
     Dim filesinfo As Date()
     Dim update_delay As Integer
     Dim textbox_debug_clr As Boolean
     Dim write_when_load_flg As Boolean
+    Dim write_when_change_flg As Boolean
     Private _rnd As New Random()
 
 
@@ -347,6 +349,232 @@ Public Class Form1
             End If
     End Sub
 
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        write_when_change_flg = False
+        If Me.filesinfo Is Nothing And False Then
+            Timer1.Stop()
+            Timer1.Interval = update_delay + 200 * _rnd.Next(0, 15) + 1
+            textbox_debug_clr = True
+            Exit Sub
+        End If
+        Dim myNOW As Date = Date.Now
+        '讀取子目錄中所有檔案
+        Dim di As New IO.DirectoryInfo(rootDIR & "\" & Me.folder_changed_now)
+        Dim filesinfoo As IO.FileInfo()
+        Dim myListo As New List(Of IO.FileInfo)()
+        Dim files() As String
+        Dim myList As New List(Of Date)()
+        Try
+            'diar1 = di.GetFiles()
+            files = IO.Directory.GetFiles(rootDIR & "\" & Me.folder_changed_now, "*.*", System.IO.SearchOption.AllDirectories)
+            filesinfoo = di.GetFiles("*.*", System.IO.SearchOption.AllDirectories)
+        Catch ex As Exception
+            textbox_debug_clr = True
+            Exit Sub
+        End Try
+
+        'list the names of all files in the specified directory
+        For i As Integer = 0 To filesinfoo.Length - 1
+            myListo.Add(filesinfoo(i))
+        Next
+        Array.Sort(Of IO.FileInfo)(filesinfoo, Function(p1, p2) p2.LastAccessTime.CompareTo(p1.LastAccessTime))
+
+        '編輯10秒內有變動的檔案列表
+        For i As Integer = 0 To filesinfoo.Length - 1
+            If DateTime.Compare(filesinfoo(i).LastAccessTime.AddSeconds(10), myNOW) > 0 Or
+               DateTime.Compare(filesinfoo(i).LastWriteTime.AddSeconds(10), myNOW) > 0 Then
+                recentList = recentList & filesinfoo(i).Name & vbCrLf
+            End If
+        Next
+
+        '編輯子目錄中的檔案列表的存取時間
+        For i As Integer = 0 To files.Length - 1
+            myList.Add("#" & File.GetLastWriteTime(files(i)) & "#")
+        Next
+
+        '子目錄中所有檔案的最後存取時間排序, 0:最新, N:最舊
+        Dim filesinfo As Date() = myList.ToArray()
+        Array.Sort(Of Date)(filesinfo, Function(d1, d2) d2.CompareTo(d1))
+
+        Me.filesinfo = filesinfo
+
+        If folder_changed_now <> "" Then
+            If FileInUse(rootDIR & "\XML_log.xml") = False Then
+                writelogxml(folder_changed_now, filesinfoo)
+                UpdateUI(GanttChart1)
+            Else
+                Dim thedelay As Integer = 300
+                TextBox_debug.AppendText(thedelay & " 毫秒後重試一次" & vbCrLf)
+                Timer1.Interval = thedelay
+                Timer1.Start()
+            End If
+
+        Else
+
+        End If
+        'NotifyIcon1.Icon = SystemIcons.Information
+        NotifyIcon1.BalloonTipTitle = "『" & folder_changed_now & "』有點動靜 - pid:" & Process.GetCurrentProcess.Id
+        NotifyIcon1.BalloonTipText = IIf(recentList = "", "不列出刪除檔案", recentList)
+
+        If write_when_change_flg = True Then
+
+        End If
+        NotifyIcon1.Visible = True
+        NotifyIcon1.ShowBalloonTip(2000)
+        TextBox_debug.AppendText("更新通知" & vbCrLf)
+        Timer1.Interval = update_delay + 200 * CInt(Math.Ceiling(Rnd() * 15)) + 1
+        Timer1.Stop()
+        textbox_debug_clr = True
+        Me.folder_changed_now = ""
+    End Sub
+
+    Private Sub writelogxml(folder As String, filesinfoo As IO.FileInfo())
+        '設計規格:
+        '當資料夾結構變動時，紀錄子目錄的變動時間，精度=小時
+        '忽略檔案
+        Dim filesinfo_lw As IO.FileInfo() = filesinfoo
+        Array.Sort(Of IO.FileInfo)(filesinfo_lw, Function(p1, p2) p2.LastWriteTime.CompareTo(p1.LastWriteTime))
+
+        If filesinfoo(0).Name.ToUpper.Contains("XML_LOG") Or
+           filesinfoo(0).Name.ToUpper.Contains("~$") Or
+           filesinfoo(0).Name.ToUpper.Contains("~") Or
+           filesinfoo(0).Name.ToUpper.Contains("FETCH_HEAD") Or
+           Path.GetExtension(filesinfoo(0).FullName).ToUpper.Contains("TMP") Then
+            If filesinfo_lw(0).Name.ToUpper.Contains("XML_LOG") Or
+               filesinfo_lw(0).Name.ToUpper.Contains("~$") Or
+               filesinfo_lw(0).Name.ToUpper.Contains("~") Or
+               filesinfoo(0).Name.ToUpper.Contains("FETCH_HEAD") Or
+               Path.GetExtension(filesinfo_lw(0).FullName).ToUpper.Contains("TMP") Then
+                Exit Sub
+            End If
+        End If
+
+        recentList = ""
+        Dim datelist As New List(Of Date)
+        Dim datearr As Date()
+        Array.Sort(Of IO.FileInfo)(filesinfoo, Function(p1, p2) p2.LastWriteTime.CompareTo(p1.LastWriteTime))
+        For i As Integer = 0 To filesinfoo.Length - 1
+            Select Case Date.Compare(filesinfoo(i).LastWriteTime, filesinfoo(i).LastAccessTime)
+                Case 1
+                    datelist.Add(filesinfoo(i).LastWriteTime)
+                    If DateTime.Compare(filesinfoo(i).LastWriteTime.AddSeconds(10), Date.Now) > 0 Then
+                        recentList = recentList & filesinfoo(i).Name & vbCrLf
+                    End If
+                Case 0
+                    datelist.Add(filesinfoo(i).LastAccessTime)
+                    If DateTime.Compare(filesinfoo(i).LastAccessTime.AddSeconds(10), Date.Now) > 0 Then
+                        recentList = recentList & filesinfoo(i).Name & vbCrLf
+                    End If
+                Case -1
+                    datelist.Add(filesinfoo(i).LastAccessTime)
+                    If DateTime.Compare(filesinfoo(i).LastAccessTime.AddSeconds(10), Date.Now) > 0 Then
+                        recentList = recentList & filesinfoo(i).Name & vbCrLf
+                    End If
+            End Select
+
+        Next
+        datearr = datelist.ToArray
+        Array.Sort(Of Date)(datearr, Function(p1, p2) p2.CompareTo(p1))
+
+
+        'filesinfo_arr = myListo.ToArray()
+        'Array.Sort(Of IO.FileInfo)(filesinfo_arr, Function(p1, p2) p2.LastWriteTime.CompareTo(p1.LastWriteTime))
+
+        'If FileInUse(rootDIR & "\XML_log.xml") Then
+        'Exit Sub
+        'End If
+
+        If File.Exists(rootDIR & "\XML_log.xml") Then
+            Dim file As System.IO.StreamWriter = Nothing
+            Dim xdoc As XmlDocument = New XmlDocument
+            Dim xRoot As XmlNode
+            Dim xNodeTemp As XmlNode, xNodeTemp2 As XmlNodeList
+            Dim xElement2 As XmlElement
+            Dim xChildElement As XmlElement
+            Try
+                '讀取 XML
+                'If FileInUse(rootDIR & "\XML_log.xml") = False Then file = My.Computer.FileSystem.OpenTextFileWriter(rootDIR & "\XML_log2.xml", True)
+                xdoc.Load(rootDIR & "\XML_log.xml")
+                xRoot = CType(xdoc.DocumentElement, XmlNode)
+                '選擇節點folder[@name=子目錄名稱]
+                xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & folder & "']")
+                If xNodeTemp Is Nothing Then
+                    '如果找不到節點,則建立節點folder[@name=子目錄名稱]
+                    xChildElement = xdoc.CreateElement("folder")
+                    xChildElement.SetAttribute("name", folder)
+                    xChildElement.SetAttribute("create", Date.Now.ToString("yyyy.MM.dd"))
+                    xRoot.AppendChild(xChildElement)
+                    If filesinfoo.Length > 0 Then
+                        '建立節點log[@time]
+                        xElement2 = xdoc.CreateElement("log")
+                        xElement2.SetAttribute("time", datearr(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                        xChildElement.AppendChild(xElement2)
+                        write_when_change_flg = True
+                    End If
+                Else
+                    Dim date_tmp As Date
+                    xNodeTemp2 = xNodeTemp.SelectNodes("log[@time!='']")
+                    Select Case xNodeTemp2.Count
+                        Case 0  '沒有紀錄，新增子目錄內的檔案列表中最近的存取時間
+                            xElement2 = xdoc.CreateElement("log")
+                            xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                            xNodeTemp.AppendChild(xElement2)
+                            write_when_change_flg = True
+                        Case 1  '存在一個紀錄，假如子目錄內的檔案列表中最近的存取時間>原本記錄，則新增子目錄內的檔案列表中最近的存取時間
+                            date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
+                            If Date.Compare(filesinfo(0), date_tmp) > 0 Then
+                                xElement2 = xdoc.CreateElement("log")
+                                xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                                xNodeTemp.AppendChild(xElement2)
+                                write_when_change_flg = True
+                            End If
+                        Case Else '存在多個紀錄，假如子目錄內的檔案列表中最近的存取時間與最後記錄的時差=0，複寫最後一個紀錄，否則新增一個紀錄
+                            date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
+                            If Date.Compare(filesinfo(0), date_tmp) > 0 Then
+                                If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo(0).ToString("yyyy.MM.dd HH") Then
+                                    xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
+                                End If
+                                xElement2 = xdoc.CreateElement("log")
+                                xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                                xNodeTemp.AppendChild(xElement2)
+                                write_when_change_flg = True
+                            End If
+                    End Select
+                End If
+                If FileInUse(rootDIR & "\XML_log.xml") = False And write_when_change_flg = True Then
+                    'Dim fs As Stream
+                    'xdoc.Save(fs)
+
+                    'If Not file Is Nothing Then file.Close()
+                    xdoc.Save(rootDIR & "\XML_log.xml")
+
+                End If
+            Catch ex As Exception
+                MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
+            End Try
+        Else
+            Dim xdoc As XmlDocument
+            Dim xElement As XmlElement
+            Try
+                Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
+                Dim dirarr As String()
+                dirarr = rootDIR.Split("\")
+                '建立一個 XmlDocument 物件並加入 Declaration
+                xdoc = New XmlDocument
+                xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
+                '建立根節點物件並加入 XmlDocument 中 (第 0 層)
+                xElement = xdoc.CreateElement("root")
+                '在 sections 寫入一個屬性
+                xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
+                xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
+                xdoc.AppendChild(xElement)
+                If FileInUse(rootDIR & "\XML_log.xml") = False Then xdoc.Save(rootDIR & "\XML_log.xml")
+            Catch ex As Exception
+                MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
+            End Try
+        End If
+    End Sub
+
     Private Delegate Sub UpdateUICallBack(ByVal GanttChart1 As Control)
 
     Private Sub UpdateUI(ByVal c As Control)
@@ -412,109 +640,6 @@ Public Class Form1
             End If
     End Sub
 
-    'Private Sub writelogxml(folder As String, filesinfo As date())
-    Private Sub writelogxml(folder As String, filesinfoo As IO.FileInfo())
-        '設計規格:
-        '當資料夾結構變動時，紀錄子目錄的變動時間，精度=小時
-        '忽略檔案
-        If filesinfoo(0).Name.ToUpper.Contains("XML_LOG") Or
-           filesinfoo(0).Name.ToUpper.Contains("~$") Or
-           filesinfoo(0).Name.ToUpper.Contains("~") Or
-           Path.GetExtension(filesinfoo(0).FullName).ToUpper.Contains("TMP") Then
-            Exit Sub
-        End If
-
-        'If FileInUse(rootDIR & "\XML_log.xml") Then
-        'Exit Sub
-        'End If
-
-        If File.Exists(rootDIR & "\XML_log.xml") Then
-            Dim file As System.IO.StreamWriter = Nothing
-            Dim xdoc As XmlDocument = New XmlDocument
-            Dim xRoot As XmlNode
-            Dim xNodeTemp As XmlNode, xNodeTemp2 As XmlNodeList
-            Dim xElement2 As XmlElement
-            Dim xChildElement As XmlElement
-            Try
-                '讀取 XML
-                'If FileInUse(rootDIR & "\XML_log.xml") = False Then file = My.Computer.FileSystem.OpenTextFileWriter(rootDIR & "\XML_log2.xml", True)
-                xdoc.Load(rootDIR & "\XML_log.xml")
-                xRoot = CType(xdoc.DocumentElement, XmlNode)
-                '選擇節點folder[@name=子目錄名稱]
-                xNodeTemp = xRoot.SelectSingleNode("folder[@name='" & folder & "']")
-                If xNodeTemp Is Nothing Then
-                    '如果找不到節點,則建立節點folder[@name=子目錄名稱]
-                    xChildElement = xdoc.CreateElement("folder")
-                    xChildElement.SetAttribute("name", folder)
-                    xChildElement.SetAttribute("create", Date.Now.ToString("yyyy.MM.dd"))
-                    xRoot.AppendChild(xChildElement)
-                    If filesinfoo.Length > 0 Then
-                        '建立節點log[@time]
-                        xElement2 = xdoc.CreateElement("log")
-                        xElement2.SetAttribute("time", filesinfoo(0).LastAccessTime.ToString("yyyy.MM.dd HH:mm:ss"))
-                        xChildElement.AppendChild(xElement2)
-                    End If
-                Else
-                    Dim date_tmp As Date
-                    xNodeTemp2 = xNodeTemp.SelectNodes("log[@time!='']")
-                    Select Case xNodeTemp2.Count
-                        Case 0  '沒有紀錄，新增子目錄內的檔案列表中最近的存取時間
-                            xElement2 = xdoc.CreateElement("log")
-                            xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
-                            xNodeTemp.AppendChild(xElement2)
-                        Case 1  '存在一個紀錄，假如子目錄內的檔案列表中最近的存取時間>原本記錄，則新增子目錄內的檔案列表中最近的存取時間
-                            date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
-                            If Date.Compare(filesinfo(0), date_tmp) > 0 Then
-                                xElement2 = xdoc.CreateElement("log")
-                                xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
-                                xNodeTemp.AppendChild(xElement2)
-                            End If
-                        Case Else '存在多個紀錄，假如子目錄內的檔案列表中最近的存取時間與最後記錄的時差=0，複寫最後一個紀錄，否則新增一個紀錄
-                            date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
-                            If Date.Compare(filesinfo(0), date_tmp) > 0 Then
-                                If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo(0).ToString("yyyy.MM.dd HH") Then
-                                    xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
-                                End If
-                                xElement2 = xdoc.CreateElement("log")
-                                xElement2.SetAttribute("time", filesinfo(0).ToString("yyyy.MM.dd HH:mm:ss"))
-                                xNodeTemp.AppendChild(xElement2)
-                            End If
-                    End Select
-                End If
-                If FileInUse(rootDIR & "\XML_log.xml") = False Then
-                    'Dim fs As Stream
-                    'xdoc.Save(fs)
-
-                    'If Not file Is Nothing Then file.Close()
-                    xdoc.Save(rootDIR & "\XML_log.xml")
-
-                End If
-            Catch ex As Exception
-                MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
-            End Try
-        Else
-            Dim xdoc As XmlDocument
-            Dim xElement As XmlElement
-            Try
-                Dim theday As Date = "#" & Directory.GetCreationTime(rootDIR) & "#"
-                Dim dirarr As String()
-                dirarr = rootDIR.Split("\")
-                '建立一個 XmlDocument 物件並加入 Declaration
-                xdoc = New XmlDocument
-                xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", "no"))
-                '建立根節點物件並加入 XmlDocument 中 (第 0 層)
-                xElement = xdoc.CreateElement("root")
-                '在 sections 寫入一個屬性
-                xElement.SetAttribute("name", dirarr(dirarr.Length - 1))
-                xElement.SetAttribute("create", theday.ToString("yyyy.MM.dd"))
-                xdoc.AppendChild(xElement)
-                If FileInUse(rootDIR & "\XML_log.xml") = False Then xdoc.Save(rootDIR & "\XML_log.xml")
-            Catch ex As Exception
-                MessageBox.Show(ex.Message & System.Environment.NewLine & ex.StackTrace)
-            End Try
-        End If
-    End Sub
-
     Private Sub Form1_SizeChanged(sender As Object, e As EventArgs) Handles Me.SizeChanged
         If Me.WindowState = FormWindowState.Minimized Then
             Me.WindowState = FormWindowState.Minimized
@@ -535,79 +660,6 @@ Public Class Form1
         'Me.Visible = False
         Me.NotifyIcon1.Visible = False
         'e.Cancel = True
-    End Sub
-
-    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
-        If Me.filesinfo Is Nothing And False Then
-            Timer1.Stop()
-            Timer1.Interval = update_delay + 200 * _rnd.Next(0, 15) + 1
-            textbox_debug_clr = True
-            Exit Sub
-        End If
-        Dim myNOW As Date = Date.Now
-        '讀取子目錄中所有檔案
-        Dim di As New IO.DirectoryInfo(rootDIR & "\" & Me.folder_changed_now)
-        Dim filesinfoo As IO.FileInfo()
-        Dim myListo As New List(Of IO.FileInfo)()
-        Dim recentList As String = ""
-        Dim files() As String
-        Dim myList As New List(Of Date)()
-        Try
-            'diar1 = di.GetFiles()
-            files = IO.Directory.GetFiles(rootDIR & "\" & Me.folder_changed_now, "*.*", System.IO.SearchOption.AllDirectories)
-            filesinfoo = di.GetFiles("*.*", System.IO.SearchOption.AllDirectories)
-        Catch ex As Exception
-            textbox_debug_clr = True
-            Exit Sub
-        End Try
-
-        'list the names of all files in the specified directory
-        For i As Integer = 0 To filesinfoo.Length - 1
-            myListo.Add(filesinfoo(i))
-        Next
-        Array.Sort(Of IO.FileInfo)(filesinfoo, Function(p1, p2) p2.LastAccessTime.CompareTo(p1.LastAccessTime))
-        For i As Integer = 0 To filesinfoo.Length - 1
-            If DateTime.Compare(filesinfoo(i).LastAccessTime.AddSeconds(10), myNOW) > 0 Or
-               DateTime.Compare(filesinfoo(i).LastWriteTime.AddSeconds(10), myNOW) > 0 Then
-                recentList = recentList & filesinfoo(i).Name & vbCrLf
-            End If
-        Next
-
-        For i As Integer = 0 To files.Length - 1
-            myList.Add("#" & File.GetLastAccessTime(files(i)) & "#")
-        Next
-        '子目錄中所有檔案的最後存取時間排序, 0:最新, N:最舊
-        Dim filesinfo As Date() = myList.ToArray()
-        Array.Sort(Of Date)(filesinfo, Function(d1, d2) d2.CompareTo(d1))
-
-        'Me.folder_changed_now = e.Name
-        Me.filesinfo = filesinfo
-
-        If folder_changed_now <> "" Then
-            If FileInUse(rootDIR & "\XML_log.xml") = False Then
-                writelogxml(folder_changed_now, filesinfoo)
-                UpdateUI(GanttChart1)
-            Else
-                Dim thedelay As Integer = 300
-                TextBox_debug.AppendText(thedelay & " 毫秒後重試一次" & vbCrLf)
-                Timer1.Interval = thedelay
-                Timer1.Start()
-            End If
-
-        Else
-
-        End If
-        'NotifyIcon1.Icon = SystemIcons.Information
-        NotifyIcon1.BalloonTipTitle = "『" & folder_changed_now & "』有點動靜 - pid:" & Process.GetCurrentProcess.Id
-        NotifyIcon1.BalloonTipText = IIf(recentList = "", "不列出刪除檔案", recentList)
-
-        NotifyIcon1.Visible = True
-        NotifyIcon1.ShowBalloonTip(2000)
-        TextBox_debug.AppendText("更新通知" & vbCrLf)
-        Timer1.Interval = update_delay + 200 * CInt(Math.Ceiling(Rnd() * 15)) + 1
-        Timer1.Stop()
-        textbox_debug_clr = True
-        Me.folder_changed_now = ""
     End Sub
 
     Private Function FileInUse(ByVal f As String) As Boolean
