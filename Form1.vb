@@ -547,16 +547,24 @@ Public Class Form1
                                 write_when_change_flg = True
                             End If
                         Case Else '存在多個紀錄，假如子目錄內的檔案列表中最近的存取時間與最後記錄的時差=0，複寫最後一個紀錄，否則新增一個紀錄
-                            date_tmp = "#" & CType(xNodeTemp2.Item(xNodeTemp2.Count - 1), XmlElement).GetAttribute("time") & "#"
-                            If Date.Compare(filesinfo2(0).lastAccessOrWriteDate, date_tmp) > 0 Then
-                                If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH") Then
-                                    xNodeTemp.RemoveChild(xNodeTemp2.Item(xNodeTemp2.Count - 1))
+                            '整理原有的log紀錄
+                            Dim rest_clr As Boolean = False
+                            For i As Integer = 0 To xNodeTemp2.Count - 1
+                                date_tmp = "#" & CType(xNodeTemp2.Item(i), XmlElement).GetAttribute("time") & "#"
+                                If rest_clr = False Then
+                                    If Date.Compare(filesinfo2(0).lastAccessOrWriteDate, date_tmp) >= 0 Then
+                                        If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH") Then
+                                            xNodeTemp.RemoveChild(xNodeTemp2.Item(i))
+                                        End If
+                                    End If
+                                Else
+                                    xNodeTemp.RemoveChild(xNodeTemp2.Item(i))
                                 End If
-                                xElement2 = xdoc.CreateElement("log")
-                                xElement2.SetAttribute("time", filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH:mm:ss"))
-                                xNodeTemp.AppendChild(xElement2)
-                                write_when_change_flg = True
-                            End If
+                            Next
+                            xElement2 = xdoc.CreateElement("log")
+                            xElement2.SetAttribute("time", filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH:mm:ss"))
+                            xNodeTemp.AppendChild(xElement2)
+                            write_when_change_flg = True
                     End Select
                 End If
                 If FileInUse(rootDIR & "\XML_log.xml") = False And write_when_change_flg = True Then
