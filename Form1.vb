@@ -11,10 +11,10 @@ Imports System.Security.Principal
 Public Class Form1
     Private WithEvents myfswFileWatcher As AdvancedFileSystemWatcher
 
-    Public rootDIR As String = ""
+    'Public rootDIR As String = ""
     'Public rootDIR As String = "\\tyd095-pc\開發中\[Q]\H188V040"
     'Public rootDIR As String = "D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
-    'Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
+    Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
     Dim recentList As String = ""
     Dim folder_changed_now As String
@@ -338,6 +338,15 @@ Public Class Form1
     Private Delegate Sub UpdateDebugCallBack(ByVal e As System.IO.FileSystemEventArgs)
 
     Private Sub UpdateDebug(ByVal e As System.IO.FileSystemEventArgs)
+        '執行時機=專案資料夾內的任何檔案更動(新增、刪除、儲存、變更名稱)時，執行一次
+        '單人工作模式，不支援多工
+        '韌體工程師為了確保品質，大部分的時間其實都在做管理，像是維護軟體設計文件、測試文件，或專案日程管理
+        '為了能夠真實的紀錄工作時程，單人工作的模式，可以量化如下
+        '   1.專案的設計文件，可拆分成多個子項目，例如『原始碼』、『設計規格書』、『測試報告』、『會議記錄』等
+        '   2.單人工作時，其實一次只能做一件事，你不可能同時寫程式碼跟維護設計書，我所說的『同時』，是在幾毫秒內『同時』做兩件事的
+        '   3.專案內所有資料的最新更動時間，都是一個里程碑
+        '單人工作模式下，當 fileWatcher 開啟子目錄監控時，單一檔案變動可能在短時間內觸發多個通知，而且都同屬一個子項目
+        '當多個通知發生之後，若 [Timer1.Interval] 內沒有新通知，則檢查一次
         If Me.InvokeRequired() Then
             Dim cb As New UpdateDebugCallBack(AddressOf UpdateDebug)
             Me.Invoke(cb, e)
@@ -356,13 +365,13 @@ Public Class Form1
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         write_when_change_flg = False
-        If Me.filesinfo Is Nothing And False Then
+        If Me.filesinfo2 Is Nothing And False Then
             Timer1.Stop()
             Timer1.Interval = update_delay + 200 * _rnd.Next(0, 15) + 1
             textbox_debug_clr = True
             Exit Sub
         End If
-        Dim myNOW As Date = Date.Now
+        Dim myNOW As Date = Date.Now    '現在時間
         '讀取子目錄中所有檔案
         Dim di As New IO.DirectoryInfo(rootDIR & "\" & Me.folder_changed_now)
         Dim filesinfoo As IO.FileInfo()
@@ -380,7 +389,7 @@ Public Class Form1
             Exit Sub
         End Try
 
-        'list the names of all files in the specified directory
+        '編輯專案子項目內資料的最新更動時間
         For i As Integer = 0 To filesinfoo.Length - 1
             Dim f As New LastAccessOrWriteList
             If Date.Compare(filesinfoo(i).LastWriteTime, filesinfoo(i).LastAccessTime) > 0 Then
@@ -393,6 +402,7 @@ Public Class Form1
             myListo.Add(filesinfoo(i))
         Next
         laowarr = laowlst.ToArray
+        '子目錄中所有檔案的最後存取時間排序, 0:最新, N:最舊
         Array.Sort(Of IO.FileInfo)(filesinfoo, Function(p1, p2) p2.LastAccessTime.CompareTo(p1.LastAccessTime))
         Array.Sort(Of LastAccessOrWriteList)(laowarr, Function(p1, p2) p2.lastAccessOrWriteDate.CompareTo(p1.lastAccessOrWriteDate))
 
@@ -405,15 +415,15 @@ Public Class Form1
         Next
 
         '編輯子目錄中的檔案列表的最新存取時間
-        For i As Integer = 0 To files.Length - 1
-            myList.Add("#" & File.GetLastWriteTime(files(i)) & "#")
-        Next
+        'For i As Integer = 0 To files.Length - 1
+        'myList.Add("#" & File.GetLastWriteTime(files(i)) & "#")
+        'Next
 
         '子目錄中所有檔案的最後存取時間排序, 0:最新, N:最舊
-        Dim filesinfo As Date() = myList.ToArray()
-        Array.Sort(Of Date)(filesinfo, Function(d1, d2) d2.CompareTo(d1))
+        'Dim filesinfo As Date() = myList.ToArray()
+        'A'rray.Sort(Of Date)(filesinfo, Function(d1, d2) d2.CompareTo(d1))
 
-        Me.filesinfo = filesinfo
+        'Me.filesinfo = filesinfo
         Me.filesinfo2 = laowarr
 
         If folder_changed_now <> "" Then
@@ -468,39 +478,31 @@ Public Class Form1
         End If
 
         recentList = ""
-        Dim datelist As New List(Of Date)
-        Dim datearr As Date()
+        'Dim datelist As New List(Of Date)
+        'Dim datearr As Date()
         Array.Sort(Of IO.FileInfo)(filesinfoo, Function(p1, p2) p2.LastWriteTime.CompareTo(p1.LastWriteTime))
         For i As Integer = 0 To filesinfoo.Length - 1
             Select Case Date.Compare(filesinfoo(i).LastWriteTime, filesinfoo(i).LastAccessTime)
                 Case 1
-                    datelist.Add(filesinfoo(i).LastWriteTime)
+                    'datelist.Add(filesinfoo(i).LastWriteTime)
                     If DateTime.Compare(filesinfoo(i).LastWriteTime.AddSeconds(10), Date.Now) > 0 Then
                         recentList = recentList & filesinfoo(i).Name & vbCrLf
                     End If
                 Case 0
-                    datelist.Add(filesinfoo(i).LastAccessTime)
+                    'datelist.Add(filesinfoo(i).LastAccessTime)
                     If DateTime.Compare(filesinfoo(i).LastAccessTime.AddSeconds(10), Date.Now) > 0 Then
                         recentList = recentList & filesinfoo(i).Name & vbCrLf
                     End If
                 Case -1
-                    datelist.Add(filesinfoo(i).LastAccessTime)
+                    'datelist.Add(filesinfoo(i).LastAccessTime)
                     If DateTime.Compare(filesinfoo(i).LastAccessTime.AddSeconds(10), Date.Now) > 0 Then
                         recentList = recentList & filesinfoo(i).Name & vbCrLf
                     End If
             End Select
 
         Next
-        datearr = datelist.ToArray
-        Array.Sort(Of Date)(datearr, Function(p1, p2) p2.CompareTo(p1))
-
-
-        'filesinfo_arr = myListo.ToArray()
-        'Array.Sort(Of IO.FileInfo)(filesinfo_arr, Function(p1, p2) p2.LastWriteTime.CompareTo(p1.LastWriteTime))
-
-        'If FileInUse(rootDIR & "\XML_log.xml") Then
-        'Exit Sub
-        'End If
+        'datearr = datelist.ToArray
+        'Array.Sort(Of Date)(datearr, Function(p1, p2) p2.CompareTo(p1))
 
         If File.Exists(rootDIR & "\XML_log.xml") Then
             Dim file As System.IO.StreamWriter = Nothing
@@ -525,7 +527,7 @@ Public Class Form1
                     If filesinfoo.Length > 0 Then
                         '建立節點log[@time]
                         xElement2 = xdoc.CreateElement("log")
-                        xElement2.SetAttribute("time", datearr(0).ToString("yyyy.MM.dd HH:mm:ss"))
+                        xElement2.SetAttribute("time", filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH:mm:ss"))
                         xChildElement.AppendChild(xElement2)
                         write_when_change_flg = True
                     End If

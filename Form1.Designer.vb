@@ -85,7 +85,7 @@ Partial Class Form1
         Me.TextBox_debug.Name = "TextBox_debug"
         Me.TextBox_debug.ReadOnly = True
         Me.TextBox_debug.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.TextBox_debug.Size = New System.Drawing.Size(335, 498)
+        Me.TextBox_debug.Size = New System.Drawing.Size(335, 431)
         Me.TextBox_debug.TabIndex = 2
         '
         'GroupBox1
@@ -97,7 +97,7 @@ Partial Class Form1
         Me.GroupBox1.Controls.Add(Me.GanttChart1)
         Me.GroupBox1.Location = New System.Drawing.Point(12, 7)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Size = New System.Drawing.Size(996, 520)
+        Me.GroupBox1.Size = New System.Drawing.Size(996, 453)
         Me.GroupBox1.TabIndex = 3
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "GroupBox1"
@@ -122,7 +122,7 @@ Partial Class Form1
         Me.GanttChart1.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.GanttChart1.Name = "GanttChart1"
         Me.GanttChart1.RowFont = New System.Drawing.Font("微軟正黑體", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(136, Byte))
-        Me.GanttChart1.Size = New System.Drawing.Size(655, 497)
+        Me.GanttChart1.Size = New System.Drawing.Size(655, 448)
         Me.GanttChart1.TabIndex = 0
         Me.GanttChart1.Text = "GanttChart1"
         Me.GanttChart1.TimeFont = New System.Drawing.Font("微軟正黑體", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
@@ -138,11 +138,11 @@ Partial Class Form1
         Me.GanttChart2.ContextMenuStrip = Me.ContextMenuGanttChart2
         Me.GanttChart2.DateFont = New System.Drawing.Font("Verdana", 8.0!)
         Me.GanttChart2.FromDate = New Date(CType(0, Long))
-        Me.GanttChart2.Location = New System.Drawing.Point(12, 534)
+        Me.GanttChart2.Location = New System.Drawing.Point(12, 467)
         Me.GanttChart2.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.GanttChart2.Name = "GanttChart2"
         Me.GanttChart2.RowFont = New System.Drawing.Font("Verdana", 8.0!)
-        Me.GanttChart2.Size = New System.Drawing.Size(996, 34)
+        Me.GanttChart2.Size = New System.Drawing.Size(996, 15)
         Me.GanttChart2.TabIndex = 1
         Me.GanttChart2.Text = "GanttChart2"
         Me.GanttChart2.TimeFont = New System.Drawing.Font("Verdana", 8.0!)
@@ -156,7 +156,7 @@ Partial Class Form1
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.FromArgb(CType(CType(207, Byte), Integer), CType(CType(219, Byte), Integer), CType(CType(213, Byte), Integer))
-        Me.ClientSize = New System.Drawing.Size(1024, 581)
+        Me.ClientSize = New System.Drawing.Size(1024, 495)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.GanttChart2)
         Me.Font = New System.Drawing.Font("微軟正黑體", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(136, Byte))
