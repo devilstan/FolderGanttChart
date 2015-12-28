@@ -11,8 +11,8 @@ Imports System.Security.Principal
 Public Class Form1
     Private WithEvents myfswFileWatcher As AdvancedFileSystemWatcher
 
+    Public rootDIR As String = ""
     'Public rootDIR As String = "\\tyd095-pc\開發中\[Q]\H188V040"
-    Public rootDIR As String = "C:\Users\devilstan\Documents"
     'Public rootDIR As String = "D:\workspace\myRepo\H188V040t" '"C:\Users\devilstan\Documents\測試基地\H188V030"
     'Public rootDIR As String = "C:\Users\devilstan\Documents\測試基地\H188V030"
 
@@ -554,8 +554,12 @@ Public Class Form1
                                 If rest_clr = False Then
                                     If Date.Compare(filesinfo2(0).lastAccessOrWriteDate, date_tmp) >= 0 Then
                                         If date_tmp.ToString("yyyy.MM.dd HH") = filesinfo2(0).lastAccessOrWriteDate.ToString("yyyy.MM.dd HH") Then
+                                            rest_clr = True
                                             xNodeTemp.RemoveChild(xNodeTemp2.Item(i))
                                         End If
+                                    Else
+                                        rest_clr = True
+                                        xNodeTemp.RemoveChild(xNodeTemp2.Item(i))
                                     End If
                                 Else
                                     xNodeTemp.RemoveChild(xNodeTemp2.Item(i))
